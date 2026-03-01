@@ -1,20 +1,5 @@
-/* =============================================
-   FOCUSFORGE — APP.JS
-   Modular, clean JavaScript
-   Firebase-ready architecture
-============================================= */
 
 'use strict';
-
-/* ─── FIREBASE CONFIG PLACEHOLDER ───────────
-   Replace with your Firebase project config.
-   Instructions:
-   1. Go to console.firebase.google.com
-   2. Create a project → Add web app
-   3. Copy the firebaseConfig object below
-   4. Uncomment the Firebase SDK imports
-   5. Replace auth/db helpers with real Firebase calls
-─────────────────────────────────────────── */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, deleteDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -56,10 +41,6 @@ const State = {
   },
 };
 
-/* =============================================
-   DB & FIRESTORE SYNC
-   Scopes all data by user.uid
-============================================= */
 const DB = {
   async saveUser(user) {
     if (!user) return;
