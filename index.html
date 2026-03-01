@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusForge — Calm Productivity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- ========== NAVIGATION ========== -->
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <div class="nav-logo" data-page="home">Focus<span>Forge</span></div>
+
+      <nav class="nav-links">
+        <button class="nav-link active" data-page="home">Home</button>
+        <button class="nav-link" data-page="dashboard">Dashboard</button>
+        <button class="nav-link" data-page="focus">Focus</button>
+        <button class="nav-link" data-page="garden">Garden</button>
+        <button class="nav-link" data-page="progress">Progress</button>
+        <button class="nav-link" data-page="profile">Profile</button>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="4" />
+            <path
+              d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+          </svg>
+          <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+          </svg>
+        </button>
+        <button class="btn btn-ghost" id="navLoginBtn">Sign in</button>
+        <button class="btn btn-primary" id="navGetStartedBtn">Get started</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== AUTH OVERLAY ========== -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-modal">
+      <button class="auth-close" id="authClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Sign in</button>
+        <button class="auth-tab" data-tab="signup">Create account</button>
+      </div>
+
+      <div class="auth-body" id="authLogin">
+        <div class="auth-header">
+          <h2 class="auth-title">Welcome back</h2>
+          <p class="auth-sub">Continue your focus journey</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="loginEmail" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="loginPassword" placeholder="Your password" />
+        </div>
+        <p class="auth-error" id="loginError"></p>
+        <button class="btn btn-primary btn-full" id="loginBtn">Sign in</button>
+        <div class="auth-divider"><span>or</span></div>
+        <button class="btn btn-google btn-full" id="googleBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+            <path fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+            <path fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+            <path fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+          </svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <div class="auth-body hidden" id="authSignup">
+        <div class="auth-header">
+          <h2 class="auth-title">Create account</h2>
+          <p class="auth-sub">Start your productivity journey today</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Full name</label>
+          <input type="text" class="form-input" id="signupName" placeholder="Your name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="signupEmail" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="signupPassword" placeholder="Min. 8 characters" />
+        </div>
+        <p class="auth-error" id="signupError"></p>
+        <button class="btn btn-primary btn-full" id="signupBtn">Create account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TOAST ========== -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ========== PAGE: HOME ========== -->
+  <main class="page active" id="page-home">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-eyebrow">
+          <span class="hero-dot"></span>
+          Calm · Focused · Consistent
+        </div>
+        <h1 class="hero-title">
+          The quiet space<br />where <em>focus</em> lives.
+        </h1>
+        <p class="hero-desc">
+          FocusForge helps students build deep study habits through gentle tracking, session timers, and elegant
+          progress insights — without the noise.
+        </p>
+        <div class="hero-cta">
+          <button class="btn btn-primary btn-large" id="heroGetStarted">Get started — it's free</button>
+          <button class="btn btn-ghost btn-large" id="heroLearnMore">See how it works</button>
+        </div>
+        <p class="hero-note">No credit card required &nbsp;·&nbsp; Ready in 30 seconds</p>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-garden-scene">
+          <!-- Floating particles -->
+          <div class="hero-particle p1"></div>
+          <div class="hero-particle p2"></div>
+          <div class="hero-particle p3"></div>
+          <div class="hero-particle p4"></div>
+          <div class="hero-particle p5"></div>
+          <div class="hero-particle p6"></div>
+
+          <!-- Orbiting icons -->
+          <div class="hero-orbit">
+            <div class="orbit-icon oi-book" title="Study">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.7">
+                <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+              </svg>
+            </div>
+            <div class="orbit-icon oi-clock" title="Focus">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.7">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <div class="orbit-icon oi-check" title="Complete">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.7">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <div class="orbit-icon oi-star" title="Achieve">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.7">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Central growing flower -->
+          <div class="hero-flower-container">
+            <div class="hero-ground"></div>
+            <div class="hero-stem"></div>
+            <div class="hero-leaves">
+              <div class="hero-leaf left"></div>
+              <div class="hero-leaf right"></div>
+            </div>
+            <div class="hero-bloom">
+              <div class="petal p-1"></div>
+              <div class="petal p-2"></div>
+              <div class="petal p-3"></div>
+              <div class="petal p-4"></div>
+              <div class="petal p-5"></div>
+              <div class="hero-center"></div>
+            </div>
+          </div>
+
+          <!-- Stage labels -->
+          <div class="hero-stage-labels">
+            <span class="stage-label sl-seed active">Seed</span>
+            <span class="stage-label sl-sprout">Sprout</span>
+            <span class="stage-label sl-bud">Bud</span>
+            <span class="stage-label sl-bloom">Bloom</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+      <div class="features-header">
+        <p class="section-label">Why FocusForge</p>
+        <h2 class="section-title">Everything you need,<br />nothing you don't.</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" style="--delay:0ms">
+          <div class="feature-icon" style="background:var(--lavender-soft)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--lavender-deep)"
+              stroke-width="1.7">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <h3 class="feature-card-title">Pomodoro Timer</h3>
+          <p class="feature-card-desc">Distraction-free focus sessions with gentle countdowns. Work in calm intervals
+            built for sustained concentration.</p>
+        </div>
+        <div class="feature-card" style="--delay:80ms">
+          <div class="feature-icon" style="background:var(--blue-pale)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue-deep)" stroke-width="1.7">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+          </div>
+          <h3 class="feature-card-title">Study Log</h3>
+          <p class="feature-card-desc">Log subjects, durations, and notes with ease. Every session stored and
+            beautifully displayed for later reflection.</p>
+        </div>
+        <div class="feature-card" style="--delay:160ms">
+          <div class="feature-icon" style="background:var(--peach-soft)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--peach-deep)" stroke-width="1.7">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </div>
+          <h3 class="feature-card-title">Progress Insights</h3>
+          <p class="feature-card-desc">Visualize your weekly study patterns with clean, minimal charts. Understand your
+            habits at a glance.</p>
+        </div>
+        <div class="feature-card" style="--delay:240ms">
+          <div class="feature-icon" style="background:var(--sage-soft)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--sage-deep)" stroke-width="1.7">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 00-3-3.87" />
+              <path d="M16 3.13a4 4 0 010 7.75" />
+            </svg>
+          </div>
+          <h3 class="feature-card-title">Streak Tracking</h3>
+          <p class="feature-card-desc">Build lasting habits through consecutive day tracking. A gentle nudge keeps your
+            momentum alive.</p>
+        </div>
+        <div class="feature-card" style="--delay:320ms">
+          <div class="feature-icon" style="background:var(--rose-soft)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--rose-deep)" stroke-width="1.7">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <h3 class="feature-card-title">Distraction-free Mode</h3>
+          <p class="feature-card-desc">Enter a fullscreen focus environment that removes everything except your timer
+            and intent.</p>
+        </div>
+        <div class="feature-card" style="--delay:400ms">
+          <div class="feature-icon" style="background:var(--lavender-soft)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--lavender-deep)"
+              stroke-width="1.7">
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </div>
+          <h3 class="feature-card-title">Dark &amp; Light Mode</h3>
+          <p class="feature-card-desc">Study at any hour. A carefully balanced dark mode preserves your focus and
+            protects your eyes at night.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA strip -->
+    <section class="cta-strip">
+      <div class="cta-strip-inner">
+        <div>
+          <h2 class="cta-title">Ready to forge your focus?</h2>
+          <p class="cta-sub">Join students who've transformed their study habits.</p>
+        </div>
+        <button class="btn btn-primary btn-large" id="ctaGetStarted">Start for free</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========== PAGE: DASHBOARD ========== -->
+  <main class="page" id="page-dashboard">
+    <div class="dash-layout">
+
+      <!-- Welcome banner -->
+      <section class="dash-welcome">
+        <div class="welcome-text">
+          <p class="welcome-eyebrow">Good <span id="timeOfDay">morning</span></p>
+          <h1 class="welcome-title" id="welcomeName">Welcome back</h1>
+          <p class="welcome-sub">Here's a quiet look at your progress today.</p>
+        </div>
+        <button class="btn btn-primary" id="dashStartFocus">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+          Start focus session
+        </button>
+      </section>
+
+      <!-- Stat cards -->
+      <section class="dash-stats">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--lavender-soft)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lavender-deep)"
+              stroke-width="1.8">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <p class="stat-val" id="statToday">0h 00m</p>
+            <p class="stat-label">Today's study time</p>
+          </div>
+          <div class="stat-trend positive" id="statTodayTrend">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--peach-soft)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--peach-deep)" stroke-width="1.8">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <p class="stat-val" id="statStreak">0</p>
+            <p class="stat-label">Day streak</p>
+          </div>
+          <div class="stat-trend" id="statStreakNote">days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--blue-pale)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue-deep)" stroke-width="1.8">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <p class="stat-val" id="statWeek">0h 00m</p>
+            <p class="stat-label">This week</p>
+          </div>
+          <div class="stat-trend" id="statWeekNote">7 days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--sage-soft)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sage-deep)" stroke-width="1.8">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <p class="stat-val" id="statSessions">0</p>
+            <p class="stat-label">Sessions logged</p>
+          </div>
+          <div class="stat-trend" id="statSessionsNote">total</div>
+        </div>
+      </section>
+
+      <div class="dash-grid">
+        <!-- Recent sessions -->
+        <section class="dash-card" id="recentCard">
+          <div class="dash-card-header">
+            <h2 class="dash-card-title">Recent sessions</h2>
+            <button class="link-btn" data-page="progress">View all</button>
+          </div>
+          <div class="session-list" id="dashRecentList">
+            <div class="empty-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
+                opacity="0.3">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              <p>No sessions yet.<br />Start your first focus session.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Weekly summary -->
+        <section class="dash-card">
+          <div class="dash-card-header">
+            <h2 class="dash-card-title">Weekly overview</h2>
+          </div>
+          <div class="week-chart" id="weekChart">
+            <div class="week-bars" id="weekBars"></div>
+            <div class="week-labels" id="weekLabels"></div>
+          </div>
+          <div class="week-subjects" id="weekSubjects"></div>
+        </section>
+      </div>
+
+      <!-- Last 3 days -->
+      <section class="dash-days" id="lastDays">
+        <h2 class="dash-section-title">Last 3 days</h2>
+        <div class="days-grid" id="daysGrid"></div>
+      </section>
+
+      <!-- Consistency Garden preview card on Dashboard -->
+      <section class="dash-garden-card" id="dashGardenCard">
+        <div class="dgc-left">
+          <div class="dgc-eyebrow">Consistency Garden</div>
+          <h2 class="dgc-title" id="dgcTitle">Your garden is growing.</h2>
+          <p class="dgc-message" id="dgcMessage">Complete today's tasks to earn a new flower.</p>
+
+          <!-- Today's bloom status -->
+          <div class="dgc-bloom-status" id="dgcBloomStatus">
+            <div class="dgc-bloom-dot" id="dgcBloomDot"></div>
+            <span class="dgc-bloom-text" id="dgcBloomText">Not yet bloomed today</span>
+          </div>
+
+          <!-- Stats row -->
+          <div class="dgc-stats-row">
+            <div class="dgc-stat">
+              <span class="dgc-stat-num" id="dgcFlowerCount">0</span>
+              <span class="dgc-stat-label">flowers</span>
+            </div>
+            <div class="dgc-stat-divider"></div>
+            <div class="dgc-stat">
+              <span class="dgc-stat-num" id="dgcStreakCount">0</span>
+              <span class="dgc-stat-label">day streak</span>
+            </div>
+            <div class="dgc-stat-divider"></div>
+            <div class="dgc-stat">
+              <span class="dgc-stat-num" id="dgcTodayPct">0%</span>
+              <span class="dgc-stat-label">today</span>
+            </div>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="dgc-progress-row">
+            <div class="dgc-progress-track">
+              <div class="dgc-progress-fill" id="dgcFill"></div>
+            </div>
+            <span class="dgc-pct" id="dgcPct">0%</span>
+          </div>
+
+          <button class="btn btn-ghost btn-sm" data-page="garden" style="margin-top:18px">View Garden →</button>
+        </div>
+        <div class="dgc-visual">
+          <div class="dgc-flower-preview" id="dgcFlowerPreview">
+            <!-- Last 9 flowers rendered here by JS -->
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========== PAGE: GROWTH GARDEN ========== -->
+  <!-- ========== PAGE: FOCUS ========== -->
+  <main class="page" id="page-focus">
+    <div class="focus-layout">
+
+      <div class="focus-main">
+        <!-- Mode selector -->
+        <div class="focus-modes">
+          <button class="focus-mode-btn active" data-mode="pomodoro">Pomodoro</button>
+          <button class="focus-mode-btn" data-mode="short">Short break</button>
+          <button class="focus-mode-btn" data-mode="long">Long break</button>
+        </div>
+
+        <!-- Timer ring -->
+        <div class="timer-wrap">
+          <svg class="timer-svg" viewBox="0 0 220 220">
+            <circle class="timer-track" cx="110" cy="110" r="96" />
+            <circle class="timer-ring" id="timerRing" cx="110" cy="110" r="96" />
+          </svg>
+          <div class="timer-center">
+            <p class="timer-display" id="timerDisplay">25:00</p>
+            <p class="timer-phase" id="timerPhase">Ready to focus</p>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="timer-controls">
+          <button class="timer-ctrl-btn" id="timerReset" aria-label="Reset">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
+            </svg>
+          </button>
+          <button class="timer-play-btn" id="timerPlay">
+            <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="26"
+              height="26">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            <svg class="pause-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              width="26" height="26">
+              <rect x="6" y="4" width="4" height="16" />
+              <rect x="14" y="4" width="4" height="16" />
+            </svg>
+          </button>
+          <button class="timer-ctrl-btn" id="timerFullscreen" aria-label="Fullscreen">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Session count -->
+        <div class="session-dots">
+          <span class="session-dot active" id="dot1"></span>
+          <span class="session-dot" id="dot2"></span>
+          <span class="session-dot" id="dot3"></span>
+          <span class="session-dot" id="dot4"></span>
+          <p class="session-dots-label">Pomodoros completed</p>
+        </div>
+
+        <!-- Session subject -->
+        <div class="focus-subject-wrap">
+          <label class="focus-subject-label">What are you working on?</label>
+          <input type="text" class="focus-subject-input" id="focusSubject" placeholder="e.g. Mathematics — Chapter 4" />
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="focus-aside">
+        <div class="focus-aside-card">
+          <h3 class="aside-title">Today's sessions</h3>
+          <div class="aside-sessions" id="focusTodaySessions">
+            <p class="aside-empty">No sessions yet today.</p>
+          </div>
+        </div>
+        <div class="focus-aside-card">
+          <h3 class="aside-title">Tips for deep work</h3>
+          <ul class="focus-tips">
+            <li>Silence notifications before starting</li>
+            <li>Set a clear intention for each session</li>
+            <li>Take your breaks seriously</li>
+            <li>Hydrate between sessions</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Fullscreen overlay -->
+    <div class="fullscreen-overlay hidden" id="fullscreenOverlay">
+      <button class="fs-exit" id="fsExit">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
+        </svg>
+        Exit
+      </button>
+      <p class="fs-phase" id="fsPhase">Focus</p>
+      <p class="fs-time" id="fsTime">25:00</p>
+      <div class="fs-controls">
+        <button class="timer-play-btn fs-play" id="fsPlay">
+          <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="28"
+            height="28">
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+          <svg class="pause-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            width="28" height="28">
+            <rect x="6" y="4" width="4" height="16" />
+            <rect x="14" y="4" width="4" height="16" />
+          </svg>
+        </button>
+      </div>
+      <p class="fs-subject" id="fsSubject"></p>
+    </div>
+  </main>
+
+  <!-- ========== PAGE: PROGRESS ========== -->
+  <main class="page" id="page-progress">
+    <div class="progress-layout">
+
+      <div class="progress-header">
+        <h1 class="progress-title">Your progress</h1>
+        <p class="progress-sub">A clear view of how your study habits are forming.</p>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="progress-summary" id="progressSummary"></div>
+
+      <!-- Weekly chart -->
+      <section class="progress-card">
+        <div class="progress-card-header">
+          <h2 class="progress-card-title">Weekly study hours</h2>
+          <div class="progress-card-meta" id="weekTotal">— hours this week</div>
+        </div>
+        <div class="big-week-chart">
+          <div class="big-week-bars" id="progressBars"></div>
+          <div class="big-week-labels" id="progressLabels"></div>
+        </div>
+      </section>
+
+      <!-- Subject breakdown -->
+      <section class="progress-card">
+        <div class="progress-card-header">
+          <h2 class="progress-card-title">Subject breakdown</h2>
+        </div>
+        <div class="subject-blocks" id="subjectBlocks">
+          <p class="aside-empty">No data yet. Start logging sessions.</p>
+        </div>
+      </section>
+
+      <!-- All logs -->
+      <section class="progress-card">
+        <div class="progress-card-header">
+          <h2 class="progress-card-title">All study logs</h2>
+          <button class="btn btn-ghost btn-sm" id="addLogBtn">+ Add log</button>
+        </div>
+        <div class="log-list" id="allLogList">
+          <p class="aside-empty">No logs yet.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========== LOG FORM MODAL ========== -->
+  <div class="auth-overlay" id="logOverlay">
+    <div class="auth-modal">
+      <button class="auth-close" id="logClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+      <div class="auth-header">
+        <h2 class="auth-title">Add study log</h2>
+        <p class="auth-sub">Record what you worked on</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subject / Topic</label>
+        <input type="text" class="form-input" id="logSubject" placeholder="e.g. Mathematics — Integration" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duration (minutes)</label>
+        <input type="number" class="form-input" id="logDuration" placeholder="e.g. 45" min="1" max="480" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <textarea class="form-input" id="logNotes" placeholder="What did you cover? Any reflections..."
+          rows="3"></textarea>
+      </div>
+      <button class="btn btn-primary btn-full" id="saveLogBtn">Save log</button>
+    </div>
+  </div>
+
+  <!-- ========== PAGE: GROWTH GARDEN ========== -->
+  <!-- ========== PAGE: CONSISTENCY GARDEN ========== -->
+  <main class="page" id="page-garden">
+    <div class="garden-layout">
+
+      <!-- Header -->
+      <div class="garden-header">
+        <div>
+          <p class="section-label">Consistency Garden</p>
+          <h1 class="garden-title">Your garden of <em>progress.</em></h1>
+          <p class="garden-sub">Every productive day blooms a new flower. Your garden grows with your consistency.</p>
+        </div>
+        <div class="garden-header-stats">
+          <div class="garden-stat-pill">
+            <span class="garden-stat-val" id="gardenTotalFlowers">0</span>
+            <span class="garden-stat-lbl">flowers</span>
+          </div>
+          <div class="garden-stat-pill streak" id="gardenStreakPill">
+            <span class="garden-stat-val" id="gardenStreakVal">0</span>
+            <span class="garden-stat-lbl">day streak</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-column layout -->
+      <div class="garden-main-grid">
+
+        <!-- LEFT: Today's panel + tasks -->
+        <div class="garden-left-col">
+
+          <!-- Today's status card -->
+          <div class="garden-today-card" id="gardenTodayCard">
+            <div class="gtc-inner">
+              <div class="gtc-flower-spot" id="gtcFlowerSpot">
+                <!-- Today's flower SVG rendered here, or empty state -->
+                <div class="gtc-empty-ring" id="gtcEmptyRing">
+                  <svg viewBox="0 0 80 80" width="80" height="80" fill="none">
+                    <circle cx="40" cy="40" r="36" stroke="var(--border-2)" stroke-width="1.5" stroke-dasharray="4 4" />
+                  </svg>
+                </div>
+              </div>
+              <div class="gtc-text">
+                <h3 class="gtc-title" id="gtcTitle">Today's bloom</h3>
+                <p class="gtc-sub" id="gtcSub">Complete 80% of tasks to earn today's flower.</p>
+              </div>
+              <div class="gtc-progress-ring-wrap">
+                <svg class="gtc-ring-svg" viewBox="0 0 80 80">
+                  <circle class="gtc-ring-track" cx="40" cy="40" r="34" />
+                  <circle class="gtc-ring-fill" id="gtcRingFill" cx="40" cy="40" r="34" />
+                </svg>
+                <div class="gtc-ring-center">
+                  <span class="gtc-ring-pct" id="gtcRingPct">0%</span>
+                </div>
+              </div>
+            </div>
+            <!-- Growth stage indicator -->
+            <div class="growth-stage-bar" id="growthStageBar">
+              <div class="growth-stage gs-seed active" data-stage="seed"><span>Seed</span></div>
+              <div class="growth-stage-connector"></div>
+              <div class="growth-stage gs-sprout" data-stage="sprout"><span>Sprout</span></div>
+              <div class="growth-stage-connector"></div>
+              <div class="growth-stage gs-bud" data-stage="bud"><span>Bud</span></div>
+              <div class="growth-stage-connector"></div>
+              <div class="growth-stage gs-bloom" data-stage="bloom"><span>Bloom</span></div>
+            </div>
+          </div>
+
+          <!-- Today's tasks -->
+          <div class="garden-card">
+            <div class="garden-card-header">
+              <h2 class="garden-card-title">Today's tasks</h2>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span class="garden-card-meta" id="gardenTaskMeta">0 of 0</span>
+                <button class="btn btn-primary btn-sm" id="addTaskBtn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Add task
+                </button>
+              </div>
+            </div>
+            <div class="task-list" id="taskList">
+              <div class="task-empty">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
+                  opacity="0.3">
+                  <rect x="3" y="3" width="18" height="18" rx="3" />
+                  <polyline points="9 12 11 14 15 10" />
+                </svg>
+                <p>No tasks yet. Add your first task for today.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Flower garden grid -->
+        <div class="garden-right-col">
+
+          <!-- The garden itself -->
+          <div class="garden-canvas-card">
+            <div class="garden-canvas-header">
+              <h2 class="garden-canvas-title">Your garden</h2>
+              <span class="garden-canvas-meta" id="gardenCanvasMeta">0 blooms</span>
+            </div>
+
+            <!-- Flower grid -->
+            <div class="flower-grid" id="flowerGrid">
+              <div class="flower-grid-empty" id="flowerGridEmpty">
+                <svg width="40" height="40" viewBox="0 0 60 60" fill="none">
+                  <circle cx="30" cy="30" r="26" stroke="var(--border-2)" stroke-width="1.5" stroke-dasharray="5 4" />
+                  <circle cx="30" cy="30" r="4" fill="var(--border-2)" />
+                </svg>
+                <p>Your garden awaits its first bloom.</p>
+                <p class="flower-grid-empty-sub">Complete today's tasks to plant the first flower.</p>
+              </div>
+            </div>
+
+            <!-- Ground strip -->
+            <div class="garden-ground">
+              <div class="garden-ground-inner"></div>
+            </div>
+          </div>
+
+          <!-- Flower type legend -->
+          <div class="garden-legend-card">
+            <h3 class="garden-legend-title">Bloom types</h3>
+            <div class="legend-grid">
+              <div class="legend-item">
+                <div class="legend-flower" id="legendNormal"></div>
+                <div class="legend-text">
+                  <div class="legend-name">Blossom</div>
+                  <div class="legend-desc">Any productive day</div>
+                </div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-flower" id="legendStreak3"></div>
+                <div class="legend-text">
+                  <div class="legend-name">Fuller bloom</div>
+                  <div class="legend-desc">3-day streak</div>
+                </div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-flower" id="legendStreak7"></div>
+                <div class="legend-text">
+                  <div class="legend-name">Layered flower</div>
+                  <div class="legend-desc">7-day streak</div>
+                </div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-flower" id="legendStreak30"></div>
+                <div class="legend-text">
+                  <div class="legend-name">Rare bloom</div>
+                  <div class="legend-desc">30-day streak</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========== BLOOM CELEBRATION OVERLAY ========== -->
+  <div class="bloom-overlay hidden" id="bloomOverlay">
+    <div class="bloom-modal">
+      <div class="bloom-flower-spot" id="bloomFlowerSpot"></div>
+      <h2 class="bloom-title">Your consistency is blooming.</h2>
+      <p class="bloom-sub" id="bloomSub">A new flower has been added to your garden.</p>
+      <button class="btn btn-primary" id="bloomClose">View my garden</button>
+    </div>
+  </div>
+
+  <!-- ========== TASK ADD/EDIT MODAL ========== -->
+  <div class="auth-overlay" id="taskOverlay">
+    <div class="auth-modal">
+      <button class="auth-close" id="taskClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+      <div class="auth-header">
+        <h2 class="auth-title" id="taskModalTitle">Add a task</h2>
+        <p class="auth-sub">What would you like to accomplish today?</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Task description</label>
+        <input type="text" class="form-input" id="taskInput" placeholder="e.g. Solve 3 DSA problems" maxlength="120" />
+      </div>
+      <input type="hidden" id="taskEditId" value="" />
+      <button class="btn btn-primary btn-full" id="saveTaskBtn">Add task</button>
+    </div>
+  </div>
+
+  <!-- ========== PAGE: PROFILE ========== -->
+  <main class="page" id="page-profile">
+    <div class="profile-layout">
+
+      <div class="profile-hero">
+        <div class="profile-avatar" id="profileAvatar">—</div>
+        <div class="profile-info">
+          <h1 class="profile-name" id="profileName">Not signed in</h1>
+          <p class="profile-email" id="profileEmail">Sign in to track your progress</p>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <section class="profile-card">
+          <h2 class="profile-card-title">Account</h2>
+          <div class="profile-row">
+            <div class="profile-row-label">Status</div>
+            <div class="profile-row-val" id="profileStatus">—</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label">Member since</div>
+            <div class="profile-row-val" id="profileSince">—</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label">Total sessions</div>
+            <div class="profile-row-val" id="profileTotalSessions">0</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label">Total study time</div>
+            <div class="profile-row-val" id="profileTotalTime">0h 00m</div>
+          </div>
+          <div class="profile-actions">
+            <button class="btn btn-primary" id="profileAuthBtn">Sign in</button>
+            <button class="btn btn-ghost hidden" id="profileLogout">Sign out</button>
+          </div>
+        </section>
+
+        <section class="profile-card">
+          <h2 class="profile-card-title">Preferences</h2>
+          <div class="profile-row">
+            <div class="profile-row-label">Theme</div>
+            <div class="theme-toggle-row">
+              <button class="theme-pill active" data-theme-val="light">Light</button>
+              <button class="theme-pill" data-theme-val="dark">Dark</button>
+            </div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label">Pomodoro length</div>
+            <div class="profile-row-val">
+              <select class="form-select" id="pomodoroLength">
+                <option value="15">15 min</option>
+                <option value="20">20 min</option>
+                <option value="25" selected>25 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="50">50 min</option>
+              </select>
+            </div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label">Short break</div>
+            <div class="profile-row-val">
+              <select class="form-select" id="shortBreakLength">
+                <option value="3">3 min</option>
+                <option value="5" selected>5 min</option>
+                <option value="10">10 min</option>
+              </select>
+            </div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label">Long break</div>
+            <div class="profile-row-val">
+              <select class="form-select" id="longBreakLength">
+                <option value="10">10 min</option>
+                <option value="15" selected>15 min</option>
+                <option value="20">20 min</option>
+                <option value="30">30 min</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="profile-card">
+          <h2 class="profile-card-title">Your streak</h2>
+          <div class="streak-display">
+            <div class="streak-number" id="profileStreak">0</div>
+            <div class="streak-label">consecutive days</div>
+          </div>
+          <div class="streak-calendar" id="streakCalendar"></div>
+        </section>
+
+        <section class="profile-card">
+          <h2 class="profile-card-title">Data</h2>
+          <p class="profile-card-desc">Export or clear your study data.</p>
+          <div class="profile-actions" style="margin-top:20px">
+            <button class="btn btn-ghost" id="exportBtn">Export JSON</button>
+            <button class="btn btn-ghost btn-danger" id="clearDataBtn">Clear all data</button>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ========== COMPLETION OVERLAY ========== -->
+  <div class="completion-overlay hidden" id="completionOverlay">
+    <div class="completion-modal">
+      <div class="completion-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+      </div>
+      <h2 class="completion-title" id="completionTitle">Session complete</h2>
+      <p class="completion-sub" id="completionSub">Well done. Take a moment to breathe.</p>
+      <button class="btn btn-primary" id="completionClose">Continue</button>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+
+</html>
