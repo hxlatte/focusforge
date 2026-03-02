@@ -16,13 +16,13 @@ This project helped me practice:
 - Designing motivational user experiences
 
 ---
-## 🎥 Demo Video
+## Demo Video
 
 - Watch the complete project walkthrough here  
 - Demonstrates task completion, Pomodoro focus sessions, and garden growth  
 - Shows how study logs track daily learning progress
 
-<video src="01-22-46.mp4" controls width="600"></video> 
+<video src="" controls width="600"></video> 
 
 --
 
