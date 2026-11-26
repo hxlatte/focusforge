@@ -80,6 +80,7 @@ class Session:
     local_start: datetime | None # start in the user's zone (None if unknown)
     tz_known: bool
     confidence: int | None
+    synthetic: bool = False
 
     @property
     def hour(self) -> int | None:
@@ -147,6 +148,7 @@ def normalize_session(raw: dict[str, Any], default_tz: str | None = None) -> Ses
         local_start=local,
         tz_known=tz_known,
         confidence=conf,
+        synthetic=bool(raw.get("synthetic", False)),
     )
 
 

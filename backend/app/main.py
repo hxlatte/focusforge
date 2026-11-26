@@ -5,12 +5,15 @@ import logging
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
+from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 
 from .auth import AuthUser, current_user
 from .config import get_settings
-from .domain import normalize_sessions
+from .domain import normalize_sessions, safe_zone
 from .repo import FirestoreRepo, Repository
+from .rhythm import engine as rhythm_engine
+from .serialize import clean
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("focusforge.api")
@@ -24,6 +27,12 @@ def get_repo() -> Repository:
     if _repo is None:
         _repo = FirestoreRepo()
     return _repo
+
+
+class AnalyzeRequest(BaseModel):
+    # IANA zone of the user's device, e.g. "Asia/Kolkata". Needed to turn UTC timestamps
+    # into the user's local hour of day.
+    tz: str = Field(default="UTC", max_length=64)
 
 
 User = Annotated[AuthUser, Depends(current_user)]
@@ -67,6 +76,41 @@ def create_app() -> FastAPI:
             "sessions_with_notes": sum(bool(s.notes) for s in sessions),
             "unusable_rows": len(rows) - len(sessions),
         }
+
+    @app.post("/v1/analyze")
+    def analyze(body: AnalyzeRequest, user: User, repo: Repo) -> dict:
+        """Run the engines on the signed-in user's real data and store the result."""
+        try:
+            tz_ok = str(safe_zone(body.tz)) if body.tz != "UTC" else "UTC"
+            if body.tz != "UTC" and tz_ok == "UTC":
+                raise HTTPException(422, "Unknown time zone")
+            rows = repo.list(user.uid, "sessions")
+            tasks = repo.list(user.uid, "tasks")
+        except HTTPException:
+            raise
+        except Exception:
+            log.exception("Failed to read user data")
+            raise HTTPException(502, "Could not read your data")
+        sessions = normalize_sessions(rows, body.tz)
+        if any(s.synthetic for s in sessions):
+            # Synthetic data is for model testing only and must never reach a real dashboard.
+            raise HTTPException(409, "Synthetic data detected; refusing to analyse")
+        try:
+            rhythm = clean(rhythm_engine.run(sessions, tasks, tz=body.tz))
+            repo.put(user.uid, "analysis", "rhythm", rhythm)
+        except Exception:
+            log.exception("Rhythm analysis failed")
+            raise HTTPException(500, "Analysis failed")
+        return {"rhythm": rhythm}
+
+    @app.get("/v1/intelligence")
+    def intelligence(user: User, repo: Repo) -> dict:
+        """Latest stored results (no recomputation)."""
+        try:
+            return {"rhythm": repo.get(user.uid, "analysis", "rhythm")}
+        except Exception:
+            log.exception("Failed to read analysis")
+            raise HTTPException(502, "Could not read your analysis")
 
     return app
 
