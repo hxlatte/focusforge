@@ -13,6 +13,7 @@ from .config import get_settings
 from .domain import normalize_sessions, safe_zone
 from .repo import FirestoreRepo, Repository
 from .logs import analyzer as log_analyzer
+from .recommend import engine as reco_engine
 from .rhythm import engine as rhythm_engine
 from .serialize import clean
 
@@ -127,14 +128,26 @@ def create_app() -> FastAPI:
         except Exception:
             log.exception("Study-log analysis failed")
             raise HTTPException(500, "Analysis failed")
-        return {"rhythm": rhythm, "learning": _summary(learning)}
+        try:
+            reco = reco_engine.run(learning, rhythm, repo.list(user.uid, "recommendations"), sessions)
+            for r in reco["recommendations"]:
+                repo.put(user.uid, "recommendations", r["id"], clean(r))
+            repo.put(user.uid, "analysis", "recommendations_meta",
+                     clean({"deferred": reco["deferred"], "evaluation": reco["evaluation"],
+                            "generated_at": rhythm["generated_at"]}))
+        except Exception:
+            log.exception("Recommendation step failed")
+            raise HTTPException(500, "Analysis failed")
+        return {"rhythm": rhythm, "learning": _summary(learning), "recommendations": reco}
 
     @app.get("/v1/intelligence")
     def intelligence(user: User, repo: Repo) -> dict:
         """Latest stored results (no recomputation)."""
         try:
             return {"rhythm": repo.get(user.uid, "analysis", "rhythm"),
-                    "learning": repo.get(user.uid, "analysis", "learning")}
+                    "learning": repo.get(user.uid, "analysis", "learning"),
+                    "recommendations": {"items": repo.list(user.uid, "recommendations"),
+                                        **(repo.get(user.uid, "analysis", "recommendations_meta") or {})}}
         except Exception:
             log.exception("Failed to read analysis")
             raise HTTPException(502, "Could not read your analysis")
