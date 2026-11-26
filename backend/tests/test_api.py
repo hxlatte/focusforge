@@ -61,3 +61,50 @@ def test_repo_scopes_by_uid_and_blocks_collections(env):
         env.list("alice", "users")
     with pytest.raises(ValueError):
         env.get("alice", "analysis", "../bob")
+
+
+def test_analyze_stores_result_and_is_user_scoped(env):
+    as_user("alice")
+    c = TestClient(app)
+    assert c.get("/v1/intelligence").json() == {"rhythm": None}
+    r = c.post("/v1/analyze", json={"tz": "Asia/Kolkata"})
+    assert r.status_code == 200
+    body = r.json()["rhythm"]
+    assert body["status"]["stage"] == "collecting"          # only 2 usable sessions: cold start
+    assert c.get("/v1/intelligence").json()["rhythm"]["engine"] == "cognitive_rhythm"
+    as_user("bob")
+    assert TestClient(app).get("/v1/intelligence").json() == {"rhythm": None}
+
+
+def test_analyze_rejects_bad_timezone_and_synthetic(env):
+    as_user("alice")
+    c = TestClient(app)
+    assert c.post("/v1/analyze", json={"tz": "Mars/Olympus"}).status_code == 422
+    env.seed("carol", "sessions", {"x": {"subject": "S", "duration": 25, "type": "pomodoro", "synthetic": True,
+                                          "date": "2026-11-20T10:00:00Z"}})
+    as_user("carol")
+    assert TestClient(app).post("/v1/analyze", json={"tz": "UTC"}).status_code == 409
+
+
+def test_full_result_is_firestore_safe():
+    """Firestore rejects nested arrays, NaN and numpy types; check a rich result has none."""
+    import math
+    from app.rhythm import engine as eng
+    from app.domain import normalize_sessions
+    from app.serialize import clean
+    from eval.synthetic import generate
+    s = normalize_sessions([{**d, "id": str(i)} for i, d in enumerate(generate(7, days=120))], "Asia/Kolkata")
+    res = clean(eng.run(s, tz="Asia/Kolkata"))
+
+    def walk(x, in_list=False):
+        if isinstance(x, list):
+            assert not in_list, "nested array"
+            for v in x:
+                walk(v, True)
+        elif isinstance(x, dict):
+            for v in x.values():
+                walk(v, False)
+        else:
+            assert isinstance(x, (str, int, float, bool, type(None))), type(x)
+            assert not (isinstance(x, float) and math.isnan(x))
+    walk(res)
