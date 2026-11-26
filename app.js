@@ -23,7 +23,8 @@ const db = getFirestore(app);
 ============================================= */
 const State = {
   user: null,
-  sessions: [],       // { id, subject, duration, notes, date, type }
+  sessions: [],       // { id, subject, duration, notes, date, type [, status, plannedDuration, actualDuration, startedAt, endedAt, tz, confidence] }
+  abandonedAttempts: [], // sessions with status 'abandoned' (kept out of State.sessions so existing totals/streaks are unchanged)
   tasks: [],          // { id, text, completed, date }
   gardenHistory: [],  // { date, pct, stage, taskCount, completedCount }
   settings: {
@@ -38,6 +39,9 @@ const State = {
     seconds: 25 * 60,
     mode: 'pomodoro',   // 'pomodoro' | 'short' | 'long'
     pomodorosCompleted: 0,
+    attemptStart: null, // ISO time the current focus attempt first started
+    runStartMs: null,   // wall-clock ms when the timer last (re)started running
+    elapsedMs: 0,       // wall-clock ms of focus accumulated in this attempt
   },
 };
 
@@ -58,7 +62,9 @@ const DB = {
 
     // Load Sessions
     const sSnap = await getDocs(query(collection(db, 'users', uid, 'sessions'), orderBy('date', 'desc')));
-    State.sessions = sSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const allSessions = sSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    State.sessions = allSessions.filter(s => s.status !== 'abandoned');
+    State.abandonedAttempts = allSessions.filter(s => s.status === 'abandoned');
 
     // Load Tasks
     const tSnap = await getDocs(collection(db, 'users', uid, 'tasks'));
@@ -172,6 +178,7 @@ const Auth = {
     await signOut(auth);
     State.user = null;
     State.sessions = [];
+    State.abandonedAttempts = [];
     State.tasks = [];
     State.gardenHistory = [];
     UI.setAuthNav();
@@ -235,9 +242,53 @@ const Sessions = {
       notes: session.notes || '',
       date: session.date || new Date().toISOString(),
       type: session.type || 'manual',
+      // Additive fields used by FocusForge Intelligence. Old documents simply lack them.
+      status: 'completed',
+      tz: Utils.tz(),
+    };
+    if (session.plannedDuration) data.plannedDuration = session.plannedDuration;
+    if (session.actualDuration) data.actualDuration = session.actualDuration;
+    if (session.startedAt) data.startedAt = session.startedAt;
+    if (session.endedAt) data.endedAt = session.endedAt;
+    if (session.confidence >= 1 && session.confidence <= 4) data.confidence = session.confidence;
+    const docRef = await addDoc(collection(db, 'users', State.user.uid, 'sessions'), data);
+    const record = { id: docRef.id, ...data };
+    State.sessions.unshift(record);
+    return record;
+  },
+
+  /* A focus attempt that was reset/abandoned part-way. Stored in the same
+     collection (status 'abandoned') but kept out of State.sessions. */
+  async addAbandoned(attempt) {
+    if (!State.user) return;
+    const endedAt = new Date().toISOString();
+    const data = {
+      subject: attempt.subject || 'Focus Session',
+      duration: Math.max(1, Math.round(attempt.actualMinutes)),
+      notes: '',
+      date: endedAt,
+      type: 'pomodoro',
+      status: 'abandoned',
+      plannedDuration: attempt.plannedMinutes,
+      actualDuration: Math.round(attempt.actualMinutes * 10) / 10,
+      startedAt: attempt.startedAt,
+      endedAt,
+      tz: Utils.tz(),
     };
     const docRef = await addDoc(collection(db, 'users', State.user.uid, 'sessions'), data);
-    State.sessions.unshift({ id: docRef.id, ...data });
+    State.abandonedAttempts.unshift({ id: docRef.id, ...data });
+  },
+
+  /* Attach a reflection / self-rating to an existing session. */
+  async update(id, fields) {
+    if (!State.user || !id) return;
+    const clean = {};
+    if (typeof fields.notes === 'string') clean.notes = fields.notes.trim();
+    if (fields.confidence >= 1 && fields.confidence <= 4) clean.confidence = fields.confidence;
+    if (!Object.keys(clean).length) return;
+    await updateDoc(doc(db, 'users', State.user.uid, 'sessions', id), clean);
+    const local = State.sessions.find(x => x.id === id);
+    if (local) Object.assign(local, clean);
   },
 
   async remove(id) {
@@ -361,6 +412,11 @@ const Utils = {
     return 'evening';
   },
 
+  tz() {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }
+    catch (e) { return 'UTC'; }
+  },
+
   initials(name) {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   },
@@ -440,15 +496,41 @@ const UI = {
     }
   },
 
-  showCompletion(title, sub) {
+  /* opts.reflectFor: promise of the saved session, enabling the optional reflection prompt. */
+  showCompletion(title, sub, opts = {}) {
     const overlay = document.getElementById('completionOverlay');
     document.getElementById('completionTitle').textContent = title;
     document.getElementById('completionSub').textContent = sub;
+    const box = document.getElementById('completionReflect');
+    this._pendingSession = opts.reflectFor || null;
+    this._reflectConfidence = null;
+    if (box) {
+      box.classList.toggle('hidden', !opts.reflectFor);
+      const ta = document.getElementById('reflectNotes');
+      if (ta) ta.value = '';
+      box.querySelectorAll('.reflect-chip').forEach(c => c.classList.remove('active'));
+    }
     overlay.classList.remove('hidden');
   },
 
-  hideCompletion() {
-    document.getElementById('completionOverlay').classList.add('hidden');
+  async hideCompletion() {
+    const overlay = document.getElementById('completionOverlay');
+    if (overlay.classList.contains('hidden')) return;
+    overlay.classList.add('hidden');
+    // Save the optional reflection / self-rating, if the user filled anything in.
+    const pending = this._pendingSession;
+    this._pendingSession = null;
+    if (!pending) return;
+    const notes = document.getElementById('reflectNotes')?.value?.trim() || '';
+    const confidence = this._reflectConfidence;
+    if (!notes && !confidence) return;
+    try {
+      const rec = await pending;
+      if (rec) await Sessions.update(rec.id, { notes, confidence });
+      Utils.toast('Reflection saved.');
+    } catch (e) {
+      console.warn('Could not save reflection:', e.message);
+    }
   },
 };
 
@@ -663,6 +745,10 @@ const Timer = {
   start() {
     if (State.timer.running) return;
     State.timer.running = true;
+    if (State.timer.mode === 'pomodoro') {
+      if (!State.timer.attemptStart) State.timer.attemptStart = new Date().toISOString();
+      State.timer.runStartMs = Date.now();
+    }
     this.updatePlayBtn(true);
     document.getElementById('timerPhase').textContent =
       State.timer.mode === 'pomodoro' ? 'Stay focused...' : 'Rest well...';
@@ -682,11 +768,38 @@ const Timer = {
 
   stop() {
     clearInterval(State.timer.interval);
+    // Bank wall-clock focus time so a pause is not lost (and a background tab can't undercount).
+    if (State.timer.runStartMs) {
+      State.timer.elapsedMs += Date.now() - State.timer.runStartMs;
+      State.timer.runStartMs = null;
+    }
     State.timer.running = false;
     this.updatePlayBtn(false);
   },
 
+  /* Record a part-finished focus attempt as 'abandoned', then clear it.
+     Attempts under ABANDON_MIN_MS are ignored (accidental taps). Pausing is not abandoning. */
+  ABANDON_MIN_MS: 60 * 1000,
+  discardAttempt() {
+    const t = State.timer;
+    if (t.mode !== 'pomodoro' || !t.attemptStart) return;
+    const elapsed = t.elapsedMs + (t.runStartMs ? Date.now() - t.runStartMs : 0);
+    if (elapsed >= this.ABANDON_MIN_MS) {
+      const subject = document.getElementById('focusSubject')?.value?.trim() || 'Focus Session';
+      Sessions.addAbandoned({
+        subject,
+        plannedMinutes: State.settings.pomodoroLength,
+        actualMinutes: elapsed / 60000,
+        startedAt: t.attemptStart,
+      }).catch(e => console.warn('Could not record abandoned attempt:', e.message));
+    }
+    t.attemptStart = null;
+    t.elapsedMs = 0;
+    t.runStartMs = null;
+  },
+
   reset() {
+    this.discardAttempt();
     this.stop();
     this.setMode(State.timer.mode);
   },
@@ -701,15 +814,26 @@ const Timer = {
 
       // Auto-log the session
       const subject = document.getElementById('focusSubject')?.value?.trim() || 'Focus Session';
-      Sessions.add({
+      const endedAt = new Date().toISOString();
+      const startedAt = State.timer.attemptStart
+        || new Date(Date.now() - State.settings.pomodoroLength * 60000).toISOString();
+      State.timer.attemptStart = null;
+      State.timer.elapsedMs = 0;
+      State.timer.runStartMs = null;
+      const saved = Sessions.add({
         subject,
         duration: State.settings.pomodoroLength,
         type: 'pomodoro',
         notes: '',
+        plannedDuration: State.settings.pomodoroLength,
+        actualDuration: State.settings.pomodoroLength,
+        startedAt,
+        endedAt,
       });
 
       FocusPage.renderTodaySessions();
-      UI.showCompletion('Session complete', `Great work on "${subject}". Take a moment to breathe.`);
+      UI.showCompletion('Session complete', `Great work on "${subject}". Take a moment to breathe.`,
+        { reflectFor: saved });
     } else {
       UI.showCompletion('Break complete', 'Ready to focus again? Start when you feel settled.');
     }
@@ -1016,6 +1140,8 @@ const LogForm = {
     document.getElementById('logSubject').value = '';
     document.getElementById('logDuration').value = '';
     document.getElementById('logNotes').value = '';
+    const when = document.getElementById('logWhen'); if (when) when.value = '';
+    const conf = document.getElementById('logConfidence'); if (conf) conf.value = '';
     UI.openLog();
   },
 
@@ -1027,7 +1153,20 @@ const LogForm = {
     if (!subject) { Utils.toast('Please enter a subject.'); return; }
     if (!duration || duration < 1) { Utils.toast('Enter a valid duration.'); return; }
 
-    Sessions.add({ subject, duration, notes, type: 'manual' });
+    // Optional extras: when it happened (so time-of-day analysis can use it) and a self-rating.
+    const whenVal = document.getElementById('logWhen')?.value;
+    const confVal = parseInt(document.getElementById('logConfidence')?.value) || null;
+    const extra = {};
+    if (whenVal) {
+      const started = new Date(whenVal);
+      if (!isNaN(started)) {
+        extra.startedAt = started.toISOString();
+        extra.endedAt = new Date(started.getTime() + duration * 60000).toISOString();
+        extra.date = extra.endedAt;
+      }
+    }
+    if (confVal) extra.confidence = confVal;
+    Sessions.add({ subject, duration, notes, type: 'manual', ...extra });
     UI.closeLog();
     Utils.toast('Session logged.');
     ProgressPage.render();
@@ -1040,7 +1179,7 @@ const LogForm = {
 /* ─── DATA EXPORT ────────────────────────── */
 const DataTools = {
   export() {
-    const data = { user: State.user, sessions: State.sessions, exportedAt: new Date().toISOString() };
+    const data = { user: State.user, sessions: [...State.sessions, ...State.abandonedAttempts], exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1179,6 +1318,7 @@ function attachGlobalEventListeners() {
   /* ── TIMER & FOCUS ── */
   document.querySelectorAll('.focus-mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      Timer.discardAttempt();
       Timer.stop();
       Timer.setMode(btn.dataset.mode);
       document.querySelectorAll('.focus-mode-btn').forEach(b => b.classList.remove('active'));
@@ -1192,6 +1332,13 @@ function attachGlobalEventListeners() {
   document.getElementById('fsPlay')?.addEventListener('click', () => Timer.toggle());
   document.getElementById('fsExit')?.addEventListener('click', () => Fullscreen.close());
   document.getElementById('completionClose')?.addEventListener('click', () => UI.hideCompletion());
+  document.querySelectorAll('#completionReflect .reflect-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      UI._reflectConfidence = parseInt(chip.dataset.conf);
+      document.querySelectorAll('#completionReflect .reflect-chip')
+        .forEach(c => c.classList.toggle('active', c === chip));
+    });
+  });
 
   document.getElementById('dashStartFocus')?.addEventListener('click', () => Nav.go('focus'));
   document.getElementById('focusSubject')?.addEventListener('input', () => Fullscreen.updateSubject());
