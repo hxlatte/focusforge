@@ -1,6 +1,7 @@
 """Reflection text -> observations (topic, stance, evidence)."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from ..domain import Session
@@ -66,7 +67,9 @@ def extract(session: Session) -> Reflection | None:
     prev_stances: set[str] = set()
     prev_topics: list[str] = []
     prev_idx = -99
-    for c in _expand(split_clauses(session.notes)):
+    # Notes are plain text; if someone pastes markup, drop the tags so they never become 'topics'.
+    plain = re.sub(r"<[^>]*>", " ", session.notes)
+    for c in _expand(split_clauses(plain)):
         sigs = S.detect(c.text, c.lead, prev_stances)
         ph, has_pron = T.phrases(c.text)
         stances = [s for s in sigs]

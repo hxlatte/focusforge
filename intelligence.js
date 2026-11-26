@@ -211,8 +211,8 @@ function periodBlock(obs) {
   let body = '';
   if (ps) {
     const overall = (() => { const k = ps.rows.reduce((a, r) => a + r.completed, 0), n = ps.rows.reduce((a, r) => a + r.n, 0); return n ? k / n : null; })();
-    body += ps.rows.filter(r => r.n > 0).map(r => rateRow(PERIOD_LABEL[r.period], r, overall, `${PERIOD_HOURS[r.period]} h`)).join('');
-    body += `<p class="ix-note">Dot = share of timer attempts completed, bar = 95% interval, tick = your overall rate. A wide bar means few attempts, so read it loosely.</p>`;
+    body += ps.rows.filter(r => r.n >= 3).map(r => rateRow(PERIOD_LABEL[r.period], r, overall, `${PERIOD_HOURS[r.period]} h`)).join('');
+    body += `<p class="ix-note">Dot = share of timer attempts completed, bar = 95% interval, tick = your overall rate. A wide bar means few attempts, so read it loosely. Periods with fewer than 3 attempts are left out.</p>`;
   } else if (act) {
     const max = Math.max(1, ...act.map(a => a.minutes));
     body += act.map(a => `<div class="ix-rrow"><div class="ix-rlabel">${PERIOD_LABEL[a.period]}<small>${PERIOD_HOURS[a.period]} h</small></div>
@@ -458,9 +458,10 @@ function paint() {
   if (!root) return;
   const d = Store.data;
   let body;
-  if (Store.state === 'loading' || (Store.state === 'analysing' && !d)) body = skeleton();
-  else if (Store.state === 'error' && !d) body = errorView();
-  else if (!d) body = skeleton();
+  const hasData = !!(d && (d.rhythm || d.learning));
+  if (Store.state === 'loading' || (Store.state === 'analysing' && !hasData)) body = skeleton();
+  else if (Store.state === 'error' && !hasData) body = errorView();
+  else if (!hasData) body = skeleton();
   else {
     const tabs = [['insights', 'My Insights'], ['rhythm', 'My Rhythm'], ['learning', 'My Learning']];
     const panel = Store.tab === 'insights' ? insightsTab(d) : Store.tab === 'rhythm' ? rhythmTab(d) : learningTab(d);
