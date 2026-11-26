@@ -105,4 +105,18 @@ This project helped me practice:
 - Introducing achievement badges and rewards  
 - Providing AI-based productivity insights  
 - Improving mobile responsiveness  
-- Adding customizable themes and garden styles  
+- Adding customizable themes and garden styles
+
+---
+
+## FocusForge Intelligence (new)
+
+An analytics layer on top of the app: a **Cognitive Rhythm Engine** (when and how you study best,
+learned from your own sessions), a **Study-Log Analyzer** (topics, difficulties and revision needs read from
+your reflections, scheduled with FSRS), and **recommendations** that combine both. Everything is shown
+in the **Intelligence** page and nothing is added to your tasks unless you accept it.
+
+* Honest by design: it explains when there is not enough data, separates observed patterns from model
+  predictions, and shows the evidence (your own sentences) behind every insight.
+* Setup and architecture: [`backend/README.md`](backend/README.md). Evaluation, with limits: [`docs/EVALUATION.md`](docs/EVALUATION.md).
+* Run locally: `cd backend && pip install -r requirements.txt && uvicorn app.main:app --port 8000`.
