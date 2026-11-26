@@ -9,8 +9,12 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
       // ─── SESSIONS (sub-collection) ─────────
+      // `status` is optional (legacy documents have none) but, when present, must be valid.
       match /sessions/{sessionId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, delete: if request.auth != null && request.auth.uid == userId;
+        allow create, update: if request.auth != null && request.auth.uid == userId
+          && (!('status' in request.resource.data)
+              || request.resource.data.status in ['completed', 'abandoned']);
       }
 
       // ─── TASKS (sub-collection) ────────────
@@ -21,6 +25,35 @@ service cloud.firestore {
       // ─── GARDEN (sub-collection) ───────────
       match /garden/{flowerId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // ─── FOCUSFORGE INTELLIGENCE ───────────
+      // Written by the backend (the Admin SDK bypasses these rules). The browser can
+      // read its own results but cannot forge analysis, topics or insights.
+      match /analysis/{docId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false;
+      }
+      match /topics/{topicId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false;
+      }
+      // Recommendations: the user may only change their response to one.
+      match /recommendations/{recId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create, delete: if false;
+        allow update: if request.auth != null && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status', 'statusUpdatedAt'])
+          && request.resource.data.status in ['proposed', 'accepted', 'dismissed', 'completed'];
+      }
+      // Recall ratings (1-4) entered when reviewing a topic.
+      match /reviews/{reviewId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId
+          && request.resource.data.rating in [1, 2, 3, 4]
+          && request.resource.data.topicId is string;
+        allow update, delete: if false;
       }
     }
 

@@ -654,6 +654,20 @@
         <textarea class="form-input" id="logNotes" placeholder="What did you cover? Any reflections..."
           rows="3"></textarea>
       </div>
+      <div class="form-group">
+        <label class="form-label">When did you study? <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <input type="datetime-local" class="form-input" id="logWhen" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">How well did it go? <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <select class="form-input" id="logConfidence">
+          <option value="">—</option>
+          <option value="1">Lost</option>
+          <option value="2">Shaky</option>
+          <option value="3">Okay</option>
+          <option value="4">Solid</option>
+        </select>
+      </div>
       <button class="btn btn-primary btn-full" id="saveLogBtn">Save log</button>
     </div>
   </div>
@@ -968,6 +982,16 @@
       </div>
       <h2 class="completion-title" id="completionTitle">Session complete</h2>
       <p class="completion-sub" id="completionSub">Well done. Take a moment to breathe.</p>
+      <div class="completion-reflect hidden" id="completionReflect">
+        <textarea class="form-input" id="reflectNotes" rows="2"
+          placeholder="Optional: what did you cover, and what felt unclear?"></textarea>
+        <div class="reflect-chips" role="group" aria-label="How well did it go?">
+          <button type="button" class="reflect-chip" data-conf="1">Lost</button>
+          <button type="button" class="reflect-chip" data-conf="2">Shaky</button>
+          <button type="button" class="reflect-chip" data-conf="3">Okay</button>
+          <button type="button" class="reflect-chip" data-conf="4">Solid</button>
+        </div>
+      </div>
       <button class="btn btn-primary" id="completionClose">Continue</button>
     </div>
   </div>
