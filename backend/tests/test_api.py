@@ -66,14 +66,14 @@ def test_repo_scopes_by_uid_and_blocks_collections(env):
 def test_analyze_stores_result_and_is_user_scoped(env):
     as_user("alice")
     c = TestClient(app)
-    assert c.get("/v1/intelligence").json() == {"rhythm": None}
+    assert c.get("/v1/intelligence").json() == {"rhythm": None, "learning": None}
     r = c.post("/v1/analyze", json={"tz": "Asia/Kolkata"})
     assert r.status_code == 200
     body = r.json()["rhythm"]
     assert body["status"]["stage"] == "collecting"          # only 2 usable sessions: cold start
     assert c.get("/v1/intelligence").json()["rhythm"]["engine"] == "cognitive_rhythm"
     as_user("bob")
-    assert TestClient(app).get("/v1/intelligence").json() == {"rhythm": None}
+    assert TestClient(app).get("/v1/intelligence").json() == {"rhythm": None, "learning": None}
 
 
 def test_analyze_rejects_bad_timezone_and_synthetic(env):

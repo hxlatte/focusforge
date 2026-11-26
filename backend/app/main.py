@@ -12,6 +12,7 @@ from .auth import AuthUser, current_user
 from .config import get_settings
 from .domain import normalize_sessions, safe_zone
 from .repo import FirestoreRepo, Repository
+from .logs import analyzer as log_analyzer
 from .rhythm import engine as rhythm_engine
 from .serialize import clean
 
@@ -37,6 +38,24 @@ class AnalyzeRequest(BaseModel):
 
 User = Annotated[AuthUser, Depends(current_user)]
 Repo = Annotated[Repository, Depends(get_repo)]
+
+
+def _summary(learning: dict) -> dict:
+    """Light version stored in analysis/learning. Full topics (with evidence) live in topics/{id}."""
+    keep = ("id", "name", "subjects", "status", "needs_revision", "stance_counts", "mentions", "sessions",
+            "revisits", "first_seen", "last_seen", "last_signal", "schedule", "recall", "reasons")
+    return {**learning, "topics": [{k: t[k] for k in keep if k in t} for t in learning.get("topics", [])]}
+
+
+def _store_learning(repo: Repository, uid: str, learning: dict) -> None:
+    repo.put(uid, "analysis", "learning", _summary(learning))
+    new_ids = set()
+    for t in learning.get("topics", []):
+        repo.put(uid, "topics", t["id"], t)
+        new_ids.add(t["id"])
+    for old in repo.list(uid, "topics"):          # drop topics that no longer exist after re-analysis
+        if old["id"] not in new_ids:
+            repo.delete(uid, "topics", old["id"])
 
 
 def create_app() -> FastAPI:
@@ -101,13 +120,21 @@ def create_app() -> FastAPI:
         except Exception:
             log.exception("Rhythm analysis failed")
             raise HTTPException(500, "Analysis failed")
-        return {"rhythm": rhythm}
+        try:
+            reviews = repo.list(user.uid, "reviews")
+            learning = clean(log_analyzer.analyze(sessions, reviews))
+            _store_learning(repo, user.uid, learning)
+        except Exception:
+            log.exception("Study-log analysis failed")
+            raise HTTPException(500, "Analysis failed")
+        return {"rhythm": rhythm, "learning": _summary(learning)}
 
     @app.get("/v1/intelligence")
     def intelligence(user: User, repo: Repo) -> dict:
         """Latest stored results (no recomputation)."""
         try:
-            return {"rhythm": repo.get(user.uid, "analysis", "rhythm")}
+            return {"rhythm": repo.get(user.uid, "analysis", "rhythm"),
+                    "learning": repo.get(user.uid, "analysis", "learning")}
         except Exception:
             log.exception("Failed to read analysis")
             raise HTTPException(502, "Could not read your analysis")
