@@ -53,6 +53,7 @@ class Signal:
     persistent: bool = False
 
 
+_NEG_NEED = re.compile(r"\b(?:no|not|never|n't|nothing)\s+(?:longer\s+)?(?:need\w*\s+)?(?:to\s+)?$")
 _RANK = ["struggling", "revise", "confident", "understood", "revised", "mention"]
 
 
@@ -91,6 +92,8 @@ def detect(clause: str, lead: str = "", prev_stances: set[str] | None = None) ->
             else:
                 out.setdefault("revised", Signal("revised", cue))
         elif stance == "revise":
+            if _NEG_NEED.search(before[-24:]):               # "no need to revise X" is not a revise request
+                continue
             out.setdefault("revise", Signal("revise", cue))
         elif stance == "mention":
             out.setdefault("mention", Signal("mention", cue))

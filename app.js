@@ -179,6 +179,7 @@ const Auth = {
     State.user = null;
     State.sessions = [];
     State.abandonedAttempts = [];
+    State.timer.attemptStart = null; State.timer.elapsedMs = 0; State.timer.runStartMs = null;
     State.tasks = [];
     State.gardenHistory = [];
     UI.setAuthNav();
@@ -1372,6 +1373,7 @@ function attachGlobalEventListeners() {
     State.settings.pomodoroLength = parseInt(e.target.value);
     await DB.persistSettings();
     if (State.timer.mode === 'pomodoro' && !State.timer.running) {
+      Timer.discardAttempt();      // a paused attempt cannot continue with a different planned length
       Timer.setMode('pomodoro');
     }
   });

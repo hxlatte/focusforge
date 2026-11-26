@@ -265,3 +265,8 @@
   .ix-panel-wrap, .ix-panel, .ix-skel > div { animation: none; }
   .ix-hm-cell, .ix-wd-bar div, .ix-trend-bar div, .ix-progress div { transition: none; }
 }
+
+/* The extra "Intelligence" nav link must not push the bar into overflow earlier than before. */
+@media (min-width: 769px) and (max-width: 960px) {
+  .nav-link { padding: 7px 8px; font-size: 13px; }
+}

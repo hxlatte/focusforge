@@ -1,6 +1,7 @@
 """Study-Log Analyzer: reflections -> topics, learning history, clusters, revision schedule."""
 from __future__ import annotations
 
+import logging
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -16,6 +17,7 @@ from .extract import Observation, Reflection, extract
 ENGINE_VERSION = "1.0"
 MIN_NOTES_FOR_TOPICS = 1
 MIN_DIFFICULTY_FOR_CLUSTERS = 4
+log = logging.getLogger("focusforge.analyzer")
 CLUSTER_DISTANCE = {True: 0.45, False: 0.70}   # cosine distance cut-off: semantic vs lexical embedder
 RECENT_DAYS = 45
 EVIDENCE_PER_TOPIC = 8
@@ -28,7 +30,27 @@ def _week(dt: datetime) -> str:
     return f"{y}-W{w:02d}"
 
 
-def cluster_difficulties(obs: list[Observation], emb: Embedder) -> list[dict]:
+def cluster_difficulties(obs: list[Observation], emb: Embedder, used: list | None = None) -> list[dict]:
+    """Cluster with `emb`; if the semantic model fails at run time, fall back to lexical.
+
+    `used` (optional list) receives the embedder that actually produced the clusters.
+    """
+    try:
+        out = _cluster(obs, emb)
+        if used is not None:
+            used.append(emb)
+        return out
+    except Exception as exc:  # model/runtime failure must never take the analysis down
+        if not emb.semantic:
+            raise
+        log.warning("Semantic embedder failed (%s); re-clustering with lexical fallback", exc)
+        fb = get_embedder(force_fallback=True)
+        if used is not None:
+            used.append(fb)
+        return _cluster(obs, fb)
+
+
+def _cluster(obs: list[Observation], emb: Embedder) -> list[dict]:
     """Group difficulty statements that are about related things.
 
     Uses the full clause (not just the topic phrase) so wording like "tree recursion is
@@ -159,7 +181,11 @@ def analyze(sessions: list[Session], reviews: list[dict[str, Any]] | None = None
 
     topics_out.sort(key=lambda t: (not t["needs_revision"], -t["stance_counts"]["struggling"], -t["mentions"], t["name"]))
     result["topics"] = topics_out
-    result["clusters"] = cluster_difficulties(obs, emb)
+    used: list = []
+    result["clusters"] = cluster_difficulties(obs, emb, used)
+    if used and used[0] is not emb:  # runtime fallback happened: report what was really used
+        result["embedder"] = {"name": used[0].name, "semantic": used[0].semantic,
+                              "note": "semantic model failed at run time; lexical fallback used"}
 
     groups: dict[str, list[str]] = defaultdict(list)
     for t in topics_out:
