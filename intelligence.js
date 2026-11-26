@@ -22,7 +22,9 @@ const SOURCE_LABEL = { study_log: 'Study log', rhythm: 'Rhythm', default: 'Defau
 
 const FF = () => window.FocusForge;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const pct = x => (x == null ? '—' : `${Math.round(x * 100)}%`);
+const pct = x => (Number.isFinite(x) ? `${Math.round(x * 100)}%` : '—');
+const n = x => (Number.isFinite(x) ? String(x) : '—');          // any number that might be missing
+const rnd = x => (Number.isFinite(x) ? String(Math.round(x)) : '—');
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
 class ApiError extends Error {
@@ -37,7 +39,16 @@ const Store = {
   openTopic: null,
   topicCache: {},
   busy: new Set(),
+  uid: null,             // the user this cache belongs to; the cache never crosses accounts
 };
+
+function resetStore(uid) {
+  Object.assign(Store, { data: null, state: 'idle', error: null, tab: 'insights', openTopic: null,
+                         topicCache: {}, busy: new Set(), uid });
+  const root = document.getElementById('ixRoot');
+  if (root) root.innerHTML = '';
+}
+const currentUid = () => FF().auth.currentUser?.uid ?? null;
 
 /* ─── API ────────────────────────────────────── */
 async function api(path, options = {}) {
@@ -61,24 +72,29 @@ const tz = () => FF().Utils.tz();
 
 /* ─── LOADING ────────────────────────────────── */
 async function loadStored() {
+  const uid = Store.uid;
   Store.state = 'loading'; Store.error = null; paint();
   try {
     const d = await api('/v1/intelligence');
+    if (Store.uid !== uid) return;                 // signed out / switched account while waiting
     Store.data = d;
     if (!d.rhythm && !d.learning) return analyse();
     Store.state = 'ready';
-  } catch (e) { fail(e); }
+  } catch (e) { if (Store.uid !== uid) return; fail(e); }
   paint();
 }
 
 async function analyse() {
+  const uid = Store.uid;
   Store.state = 'analysing'; Store.error = null; paint();
   try {
     await api('/v1/analyze', { method: 'POST', body: JSON.stringify({ tz: tz() }) });
-    Store.data = await api('/v1/intelligence');   // single source of truth: what is stored
+    const d = await api('/v1/intelligence');       // single source of truth: what is stored
+    if (Store.uid !== uid) return;
+    Store.data = d;
     Store.topicCache = {};
     Store.state = 'ready';
-  } catch (e) { fail(e); }
+  } catch (e) { if (Store.uid !== uid) return; fail(e); }
   paint();
 }
 
@@ -181,9 +197,9 @@ function overview(d) {
   const m = (label, value, sub) => `<div class="ix-metric"><div class="ix-metric-label">${esc(label)}</div>
     <div class="ix-metric-value">${esc(value)}</div><div class="ix-metric-sub">${esc(sub)}</div></div>`;
   return `<section class="ix-overview" aria-label="Overview">
-    ${m('Sessions analysed', r ? String(r.data.total) : '—', r ? `${r.data.labelled_attempts} timer attempts with outcomes` : 'No data yet')}
+    ${m('Sessions analysed', r ? n((r.data || {}).total) : '—', r ? `${n((r.data || {}).labelled_attempts)} timer attempts with outcomes` : 'No data yet')}
     ${m('Most productive period', bp ? bp.value : '—', bp ? bp.sub : 'Needs more sessions with a start time')}
-    ${m('Topics identified', topics ? String(topics) : '—', topics ? `from ${l.data.reflections_parsed} reflections` : 'Write reflections to see topics')}
+    ${m('Topics identified', topics ? String(topics) : '—', topics ? `from ${n((l.data || {}).reflections_parsed)} reflections` : 'Write reflections to see topics')}
     ${m('Need revision', topics ? String(needs) : '—', topics ? (needs ? 'flagged from your own words' : 'nothing flagged') : 'No topics yet')}
   </section>`;
 }
@@ -198,7 +214,7 @@ function heatmap(h) {
       title="${esc(`${DAYS[row.weekday]} ${String(hr).padStart(2, '0')}:00 · ${Math.round(m)} min`)}"></div>`).join('')}`).join('');
   const hours = Array.from({ length: 24 }, (_, i) => `<span>${i % 6 === 0 ? i : ''}</span>`).join('');
   return `<div class="ix-block">
-    <div class="ix-block-head"><h3>When you study</h3><span class="ix-note">Completed focus minutes by start time · ${h.sessions_used} sessions${h.sessions_excluded_no_start ? ` · ${h.sessions_excluded_no_start} without a start time left out` : ''}</span></div>
+    <div class="ix-block-head"><h3>When you study</h3><span class="ix-note">Completed focus minutes by start time · ${n(h.sessions_used)} sessions${h.sessions_excluded_no_start ? ` · ${h.sessions_excluded_no_start} without a start time left out` : ''}</span></div>
     <div class="ix-hm" role="img" aria-label="Heatmap of focus minutes by weekday and hour">
       ${cells}<div></div><div class="ix-hm-hours">${hours}</div>
     </div>
@@ -209,8 +225,8 @@ function periodBlock(obs) {
   const ps = obs.period_success, act = obs.period_activity;
   if (!ps && !act) return '';
   let body = '';
-  if (ps) {
-    const overall = (() => { const k = ps.rows.reduce((a, r) => a + r.completed, 0), n = ps.rows.reduce((a, r) => a + r.n, 0); return n ? k / n : null; })();
+  if (ps && Array.isArray(ps.rows)) {
+    const overall = (() => { const k = ps.rows.reduce((a, r) => a + r.completed, 0), tot = ps.rows.reduce((a, r) => a + r.n, 0); return tot ? k / tot : null; })();
     body += ps.rows.filter(r => r.n >= 3).map(r => rateRow(PERIOD_LABEL[r.period], r, overall, `${PERIOD_HOURS[r.period]} h`)).join('');
     body += `<p class="ix-note">Dot = share of timer attempts completed, bar = 95% interval, tick = your overall rate. A wide bar means few attempts, so read it loosely. Periods with fewer than 3 attempts are left out.</p>`;
   } else if (act) {
@@ -228,10 +244,10 @@ function durationBlock(obs) {
   if (!td || !td.median) return '';
   const scale = Math.max(60, td.q75 * 1.3);
   let html = `<div class="ix-block"><div class="ix-block-head"><h3>Focus duration</h3></div>
-    <div class="ix-duration"><div class="ix-big">${Math.round(td.median)}<small> min</small></div>
-    <div class="ix-range"><div class="ix-range-bar" style="left:${td.q25 / scale * 100}%;width:${Math.max(2, (td.q75 - td.q25) / scale * 100)}%"></div></div>
-    <div class="ix-note">Median completed session · half last ${Math.round(td.q25)}–${Math.round(td.q75)} min · ${td.completed_n} sessions${td.abandoned_median_min ? ` · when you stop early it is after about ${Math.round(td.abandoned_median_min)} min` : ''}</div></div>`;
-  if (ab && ab.rows.length) {
+    <div class="ix-duration"><div class="ix-big">${rnd(td.median)}<small> min</small></div>
+    <div class="ix-range"><div class="ix-range-bar" style="left:${Number.isFinite(td.q25 / scale) ? td.q25 / scale * 100 : 0}%;width:${Math.max(2, Number.isFinite(td.q75 - td.q25) ? (td.q75 - td.q25) / scale * 100 : 2)}%"></div></div>
+    <div class="ix-note">Median completed session · half last ${rnd(td.q25)}–${rnd(td.q75)} min · ${n(td.completed_n)} sessions${Number.isFinite(td.abandoned_median_min) && td.abandoned_median_min ? ` · when you stop early it is after about ${rnd(td.abandoned_median_min)} min` : ''}</div></div>`;
+  if (ab && Array.isArray(ab.rows) && ab.rows.length) {
     html += `<div class="ix-sub-head">Completion by planned length</div>` + ab.rows.map(r => rateRow(r.bin, r, null)).join('');
   }
   return html + '</div>';
@@ -240,18 +256,18 @@ function durationBlock(obs) {
 function subjectBlock(obs) {
   const sc = obs.subject_completion;
   if (!sc) return '';
-  if (!sc.rows.length) return `<div class="ix-block"><div class="ix-block-head"><h3>By subject</h3></div><p class="ix-note">No subject has enough timer attempts yet (5 needed per subject${sc.hidden_subjects ? `; ${sc.hidden_subjects} below that` : ''}).</p></div>`;
+  if (!Array.isArray(sc.rows) || !sc.rows.length) return `<div class="ix-block"><div class="ix-block-head"><h3>By subject</h3></div><p class="ix-note">No subject has enough timer attempts yet (5 needed per subject${sc.hidden_subjects ? `; ${sc.hidden_subjects} below that` : ''}).</p></div>`;
   return `<div class="ix-block"><div class="ix-block-head"><h3>By subject</h3><span class="ix-note">Small groups are pulled toward your overall rate</span></div>
-    ${sc.rows.map(r => rateRow(cap(r.subject), r, sc.overall_rate, r.vs_rest && r.vs_rest.reliable ? (r.vs_rest.diff > 0 ? 'reliably higher' : 'reliably lower') : '')).join('')}
+    ${(sc.rows || []).map(r => rateRow(cap(r.subject), r, sc.overall_rate, r.vs_rest && r.vs_rest.reliable ? (r.vs_rest.diff > 0 ? 'reliably higher' : 'reliably lower') : '')).join('')}
     ${sc.hidden_subjects ? `<p class="ix-note">${sc.hidden_subjects} subject(s) have too few attempts to show.</p>` : ''}</div>`;
 }
 
 function weekdayBlock(obs) {
   const w = obs.weekday_consistency;
   if (!w) return '';
-  if (!w.available) return `<div class="ix-block"><div class="ix-block-head"><h3>Consistency by weekday</h3></div><p class="ix-note">Needs ${w.needed_weeks}+ weeks of history (you have ${w.weeks_observed}).</p></div>`;
-  return `<div class="ix-block"><div class="ix-block-head"><h3>Consistency by weekday</h3><span class="ix-note">Share of each weekday you studied · ${w.weeks_observed} weeks</span></div>
-    <div class="ix-wd">${w.rows.map(r => `<div class="ix-wd-col" title="${esc(`${DAYS_LONG[r.weekday]}: studied on ${r.studied_days} of ${r.days_observed}`)}">
+  if (!w.available) return `<div class="ix-block"><div class="ix-block-head"><h3>Consistency by weekday</h3></div><p class="ix-note">Needs ${n(w.needed_weeks)}+ weeks of history (you have ${n(w.weeks_observed)}).</p></div>`;
+  return `<div class="ix-block"><div class="ix-block-head"><h3>Consistency by weekday</h3><span class="ix-note">Share of each weekday you studied · ${n(w.weeks_observed)} weeks</span></div>
+    <div class="ix-wd">${(Array.isArray(w.rows) ? w.rows : []).map(r => `<div class="ix-wd-col" title="${esc(`${DAYS_LONG[r.weekday]}: studied on ${r.studied_days} of ${r.days_observed}`)}">
       <div class="ix-wd-bar"><div style="height:${(r.share || 0) * 100}%"></div></div><span>${DAYS[r.weekday]}</span></div>`).join('')}</div></div>`;
 }
 
@@ -272,7 +288,7 @@ function modelBlock(r) {
     body = `<p class="ix-note"><strong>Model estimate</strong>, not observed. Chance of completing a ${esc(subject)} session, by start period and planned length. Blank cells are slots your history does not cover.</p>
       <table class="ix-grid"><thead><tr><th></th>${lengths.map(L => `<th>${L} min</th>`).join('')}</tr></thead>
       <tbody>${periods.map(p => `<tr><th>${PERIOD_LABEL[p]}</th>${lengths.map(L => cell(p, L)).join('')}</tr>`).join('')}</tbody></table>
-      <p class="ix-note">Checked on later sessions it had not seen: AUC ${(c.metrics.auc ?? 0).toFixed(2)}, and it beat a plain base-rate guess by ${c.logloss_gain_vs_baseline.toFixed(3)} log-loss (${c.n_labelled} attempts, ${c.model} model).
+      <p class="ix-note">Checked on later sessions it had not seen: AUC ${(c.metrics.auc ?? 0).toFixed(2)}, and it beat a plain base-rate guess by ${c.logloss_gain_vs_baseline.toFixed(3)} log-loss (${n(c.n_labelled)} attempts, ${esc(c.model || 'unknown')} model).
       ${c.feature_group_importance && c.feature_group_importance[0] ? ` Most useful signal: ${esc(c.feature_group_importance[0].group.replace(/_/g, ' '))}.` : ''}</p>`;
   } else {
     const need = c.requirements ? c.requirements.labelled_attempts : 40;
@@ -473,18 +489,51 @@ function paint() {
   root.innerHTML = header(d) + body;
 }
 
+/* ─── PARTIAL-OUTPUT GUARD ────────────────────
+   If a stored analysis is incomplete (older version, interrupted write, a model that produced
+   no output), one malformed section must not blank the whole dashboard. Each renderer is wrapped:
+   on error it shows a small notice in place and the rest of the page still renders. */
+const guard = (name, fn) => (...a) => {
+  try { return fn(...a); } catch (e) {
+    console.warn(`Intelligence: "${name}" could not render`, e);
+    return `<div class="ix-block ix-unavailable"><p class="ix-note">This section could not be shown because the saved analysis is incomplete. Try Re-analyse.</p></div>`;
+  }
+};
+header = guard('header', header);
+overview = guard('overview', overview);
+heatmap = guard('heatmap', heatmap);
+periodBlock = guard('periods', periodBlock);
+durationBlock = guard('duration', durationBlock);
+subjectBlock = guard('subjects', subjectBlock);
+weekdayBlock = guard('weekdays', weekdayBlock);
+modelBlock = guard('model', modelBlock);
+insightList = guard('insights', insightList);
+rhythmTab = guard('rhythm', rhythmTab);
+topicBoard = guard('topics', topicBoard);
+topicPanel = guard('topic', topicPanel);
+clusterBlock = guard('clusters', clusterBlock);
+trendBlock = guard('trend', trendBlock);
+scheduleBlock = guard('schedule', scheduleBlock);
+learningTab = guard('learning', learningTab);
+recCard = guard('recommendation', recCard);
+insightsTab = guard('overview-tab', insightsTab);
+
 /* ─── ACTIONS ────────────────────────────────── */
 async function openTopic(id) {
+  const uid = Store.uid;
   Store.openTopic = id;
   paint();
   if (!Store.topicCache[id]) {
+    let val;
     try {
-      const snap = await getDoc(doc(FF().db, 'users', FF().State.user.uid, 'topics', id));
-      Store.topicCache[id] = snap.exists() ? snap.data() : { evidence: [] };
+      const snap = await getDoc(doc(FF().db, 'users', uid, 'topics', id));
+      val = snap.exists() ? snap.data() : { evidence: [] };
     } catch (e) {
       console.warn('Could not load topic evidence:', e.message);
-      Store.topicCache[id] = { evidence: [] };
+      val = { evidence: [] };
     }
+    if (Store.uid !== uid) return;
+    Store.topicCache[id] = val;
     if (Store.openTopic === id) paint();
   }
   document.getElementById('ixTopicPanel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -492,10 +541,12 @@ async function openTopic(id) {
 
 async function rate(id, rating) {
   if (Store.busy.has('rate')) return;
+  const uid = Store.uid;
   Store.busy.add('rate'); paint();
   try {
-    await addDoc(collection(FF().db, 'users', FF().State.user.uid, 'reviews'),
+    await addDoc(collection(FF().db, 'users', uid, 'reviews'),
       { topicId: id, rating, at: new Date().toISOString() });
+    if (Store.uid !== uid) return;
     FF().Utils.toast('Recall rating saved.');
     Store.busy.delete('rate');
     await analyse();                       // reschedules from the new rating
@@ -507,7 +558,7 @@ async function rate(id, rating) {
 }
 
 async function setStatus(recId, status) {
-  const uid = FF().State.user.uid;
+  const uid = Store.uid;
   const at = new Date().toISOString();
   await updateDoc(doc(FF().db, 'users', uid, 'recommendations', recId), { status, statusUpdatedAt: at });
   const rec = Store.data.recommendations.items.find(r => r.id === recId);
@@ -556,6 +607,7 @@ const Intelligence = {
     const root = document.getElementById('ixRoot');
     if (!root) return;
     if (!this._wired) { root.addEventListener('click', onClick); this._wired = true; }
+    if (Store.uid !== currentUid()) resetStore(currentUid());
     if (Store.state === 'idle' || Store.state === 'error') loadStored();
     else paint();
   },

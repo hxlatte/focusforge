@@ -20,6 +20,7 @@ start started finish finished complete completed do does did done like want want
 able understanding understand understood better best good great bad fine okay ok sure maybe probably actually
 already always never ever often sometimes usually mostly fully completely totally mostly slightly somewhat
 enough completely mainly especially particularly exactly specifically properly clearly deeply
+anymore longer easily head procrastinating procrastination
 """.split())
 _STOP = (set(ENGLISH_STOP_WORDS) - {"first", "second", "third"}) | {"i'm", "i’m", "i've", "i’ve", "it's", "it’s", "don't", "didn't", "can't", "isn't", "wasn't",
                                     "im", "ive", "dont", "cant", "also", "etc", "eg", "ie", "vs"}
@@ -131,4 +132,14 @@ def display(p: str) -> str:
 
 
 def slug(p: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", p.lower()).strip("-")[:60] or "topic"
+    """Stable, collision-resistant document id. Symbols that carry meaning are spelled out
+    ("c++" -> "c-plus-plus", "c#" -> "c-sharp"); if anything else is lost (non-Latin text,
+    truncation) a short hash of the original is appended so distinct topics never share an id."""
+    low = p.lower().strip()
+    spelled = low.replace("++", " plus plus ").replace("#", " sharp ")
+    base = re.sub(r"[^a-z0-9]+", "-", spelled).strip("-")
+    lossy = bool(re.sub(r"[a-z0-9\s\-_.,'()/&:+#]", "", low)) or len(base) > 48 or not base
+    if lossy:
+        import hashlib
+        return (base[:48].strip("-") or "topic") + "-" + hashlib.sha1(low.encode("utf-8")).hexdigest()[:6]
+    return base

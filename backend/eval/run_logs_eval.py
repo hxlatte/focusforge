@@ -116,5 +116,9 @@ if __name__ == "__main__":
     ap.add_argument("--misses", action="store_true")
     a = ap.parse_args()
     emb = TfidfEmbedder() if a.embedder == "tfidf" else get_embedder()
+    if a.embedder == "semantic" and not emb.semantic:
+        raise SystemExit("--embedder semantic requested but the model could not be loaded "
+                         "(pip install sentence-transformers and allow the model download); "
+                         "refusing to report lexical numbers as semantic ones.")
     res = {"split": a.split, "extraction": eval_extraction(a.split, a.misses), "clustering": eval_clusters(emb)}
     print(json.dumps(res, indent=2, ensure_ascii=False))

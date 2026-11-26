@@ -119,3 +119,30 @@ def test_api_stores_topics_and_isolates_users():
 def test_markup_in_notes_never_becomes_a_topic():
     r = analyze(sess(["<img src=x onerror=alert(1)> confused about <b>sorting</b>."]), [], NOW, EMB)
     assert [t["name"] for t in r["topics"]] == ["Sorting"]
+
+
+def _stances(note):
+    from app.domain import normalize_session
+    from app.logs.extract import extract
+    r = extract(normalize_session({"id": "x", "subject": "Study", "duration": 25, "notes": note,
+                                   "date": "2026-11-20T10:00:00Z", "type": "manual"}))
+    return [(o.topic, o.stance) for o in r.observations] if r else []
+
+
+def test_negated_need_is_not_a_revise_request():
+    assert ("integration", "revise") not in _stances("No need to revise integration, it's clear now.")
+    assert ("recursion", "revise") in _stances("Need to revise recursion.")
+
+
+def test_adverbs_and_idioms_do_not_become_topics():
+    topics = {t for t, _ in _stances("Not confused anymore about recursion.")
+              + _stances("No longer confused by pointers.") + _stances("I can't wrap my head around backpropagation")}
+    assert not topics & {"anymore", "longer", "head"}
+
+
+def test_topic_ids_do_not_collide():
+    from app.logs.topics import slug
+    ids = [slug(x) for x in ["c++", "c#", "c", "gradient descent", "गणित", "भौतिकी", "x" * 80, "x" * 81]]
+    assert len(set(ids)) == len(ids)
+    assert slug("gradient descent") == "gradient-descent"        # ordinary topics stay readable
+    assert slug("c++") == "c-plus-plus"

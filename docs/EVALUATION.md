@@ -61,6 +61,17 @@ topic), implicit struggle ("way over my head", "shaky", "trips me up"), coordina
 ("supply and demand" split in two), "sorted out my confusion" read as struggling, and a pronoun/plural
 referent ("both feel solid") resolving to one topic only. Two general fixes were made after the test
 run (irregular plurals such as *matrices*, markup stripping); the test split was not re-scored afterwards.
+
+**Update from the pre-PR verification pass.** Further rule changes were made after the freeze: negated need
+("no need to revise X" no longer counts as a revise request), a few adverbs/idioms removed from topic
+candidates ("anymore", "longer", "easily", "head", "procrastinating"). The "head" fix came from a failure
+mode first seen on the test split, so **the test split is no longer held-out for the current code**:
+re-running it now gives 0.70 / 0.80 / 0.74, and that number should not be quoted as independent accuracy.
+The 0.67 / 0.80 / 0.73 row above is the only honest held-out measurement, and it describes the earlier rules.
+Known remaining extraction weaknesses (found with an adversarial battery, not fixed): acronym vs full name are
+separate topics ("BST" vs "binary search tree"); a behavioural phrase can become a topic ("hard to stop
+procrastinating" -> "stop"); bare nouns such as "question" can leak from "questions about X"; the positive
+clause after "but" is dropped when it uses a cue the lexicon lacks ("the integration part was fine").
 For a real accuracy figure, label some of your own reflections in the same JSON format and run
 `python -m eval.run_logs_eval --split test`.
 

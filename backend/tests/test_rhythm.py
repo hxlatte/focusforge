@@ -90,3 +90,50 @@ def test_thresholds_gate_the_model():
     r = engine.run(sess(docs), tz="Asia/Kolkata")
     assert r["model"]["card"]["state"] == "insufficient_data"
     assert "Needs at least" in r["model"]["card"]["reason"]
+
+
+def _reference_features(att, everything, task_rates):
+    """Literal O(n^2) definition used only to check the vectorised implementation."""
+    from datetime import timedelta
+    import numpy as np
+    import pandas as pd
+    from app.rhythm.thresholds import SHRINKAGE_STRENGTH as S
+    comp = att["completed"].to_numpy(); out = []
+    for i in range(len(att)):
+        r = att.iloc[i]; st = r["start_utc"]
+        overall = (comp[:i].sum() + S * 0.5) / (i + S) if i else 0.5
+        same = [j for j in range(i) if att.at[j, "subject"] == r["subject"]]
+        sub = (comp[same].sum() + S * overall) / (len(same) + S) if same else overall
+        load, last = 0.0, None
+        for e, m in zip(everything["end_utc"], everything["actual_min"]):
+            if e <= st:
+                if st - e <= timedelta(hours=24):
+                    load += m
+                if last is None or e > last:
+                    last = e
+        since = min((st - last).total_seconds() / 3600, 48.0) if last else 48.0
+        today = sum(1 for j in range(i) if att.at[j, "local_date"] == r["local_date"])
+        out.append([overall, sub, load, since, today])
+    return pd.DataFrame(out, columns=["prior_rate", "subject_prior_rate", "load_24h", "hours_since_last",
+                                      "attempts_today"])
+
+
+def test_vectorised_features_match_literal_definition():
+    import numpy as np
+    from datetime import datetime, timedelta, timezone
+    from app.domain import normalize_sessions
+    from app.rhythm.frame import attempts_frame, build_features, sessions_frame
+    rng = np.random.default_rng(3)
+    t0 = datetime(2026, 1, 1, 8, tzinfo=timezone.utc); rows = []
+    for i in range(120):
+        t = t0 + timedelta(hours=float(rng.integers(3, 30)) * (i + 1) / 3)
+        ok = rng.random() < 0.65
+        rows.append({"id": f"s{i}", "subject": ["A — x", "B", "A — y"][i % 3], "type": "pomodoro", "duration": 25,
+                     "status": "completed" if ok else "abandoned", "plannedDuration": 25,
+                     "actualDuration": 25 if ok else 7, "startedAt": t.isoformat(),
+                     "endedAt": (t + timedelta(minutes=25 if ok else 7)).isoformat(),
+                     "date": (t + timedelta(minutes=25 if ok else 7)).isoformat(), "tz": "UTC", "notes": ""})
+    df = sessions_frame(normalize_sessions(rows, "UTC")); att = attempts_frame(df)
+    got = build_features(att, df, {}); ref = _reference_features(att, df, {})
+    for c in ref.columns:
+        assert np.allclose(got[c].to_numpy(float), ref[c].to_numpy(float), atol=1e-9), c
