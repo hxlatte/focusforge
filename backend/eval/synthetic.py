@@ -16,12 +16,13 @@ TZ = "Asia/Kolkata"
 SUBJECTS = ["coding", "math", "reading"]
 
 
-def generate(seed: int, days: int = 120, planted: bool = True, per_day: float = 2.2) -> list[dict]:
+def generate(seed: int, days: int = 120, planted: bool = True, per_day: float = 2.2,
+             start_day: datetime | None = None) -> list[dict]:
     """Return raw session docs (new schema). With planted=True: mornings and short sessions
     are completed more, evenings and 45+ minute sessions less, coding more, math less."""
     rng = np.random.default_rng(seed)
     zone = ZoneInfo(TZ)
-    start_day = datetime(2026, 1, 5, tzinfo=zone)
+    start_day = (start_day or datetime(2026, 1, 5)).replace(tzinfo=zone)
     docs: list[dict] = []
     for d in range(days):
         for _ in range(rng.poisson(per_day)):

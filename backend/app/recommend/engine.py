@@ -164,11 +164,13 @@ def run(learning: dict, rhythm: dict, existing: list[dict], sessions: list[Sessi
         contributors = ["study_log"] + (["rhythm"] if (period or any(w["source"] == "rhythm" for w in dur_why)) else [])
         why = _topic_why(t) + per_why + dur_why
         timing_clause = ""
-        if per_why and period_kind in ("observed", "predicted"):
-            timing_clause = f" {phrase.capitalize()} fits your history better" if period_kind == "observed" \
-                else f" {phrase.capitalize()} is what your model estimates is most likely to work"
-        summary = (f"{t['name']} needs revision. We suggest a {minutes}-minute revision session {phrase}."
-                   + ("" if not per_why else f"{timing_clause}: see why below."))
+        if per_why and period_kind == "observed":
+            timing_clause = f" Your sessions in the {period} have been completed more often (see why below)."
+        elif per_why and period_kind == "predicted":
+            timing_clause = f" Your personal model estimates the {period} is most likely to work (see why below)."
+        elif per_why and period_kind == "weak":
+            timing_clause = f" The {period} is when you usually study (see why below)."
+        summary = f"{t['name']} needs revision. We suggest a {minutes}-minute revision session {phrase}." + timing_clause
         rec = {
             "id": rid, "kind": "revision", "topic_id": t["id"], "topic": t["name"],
             "title": f"Revise {t['name']}", "summary": summary,

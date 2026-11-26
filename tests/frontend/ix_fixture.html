@@ -1,0 +1,24 @@
+<!doctype html>
+<!-- UI-test fixture: loads the real stylesheet and intelligence.js with the app's globals stubbed. -->
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" /><link rel="stylesheet" href="/intelligence.css" />
+</head>
+<body>
+  <main class="page active" id="page-intelligence"><div class="ix-layout" id="ixRoot"></div></main>
+  <div class="toast" id="toast"></div>
+  <script>
+    window.FF_API_BASE = 'http://127.0.0.1:8765';
+    window.__tasks = [];
+    window.FocusForge = {
+      auth: { currentUser: { getIdToken: async () => 'test-token' } },
+      db: {}, State: { user: { uid: 'demo' } },
+      Utils: { tz: () => 'Asia/Kolkata', toast: m => { window.__toast = m; } },
+    };
+    window.TaskManager = { add: async (text, date) => { window.__tasks.push({ text, date }); } };
+  </script>
+  <script type="module" src="/intelligence.js"></script>
+</body>
+</html>

@@ -114,3 +114,8 @@ def test_api_stores_topics_and_isolates_users():
         assert {t["id"] for t in repo.list("alice", "topics")} == {"vector"}      # stale topic removed
     finally:
         app.dependency_overrides.clear()
+
+
+def test_markup_in_notes_never_becomes_a_topic():
+    r = analyze(sess(["<img src=x onerror=alert(1)> confused about <b>sorting</b>."]), [], NOW, EMB)
+    assert [t["name"] for t in r["topics"]] == ["Sorting"]
