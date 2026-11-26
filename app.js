@@ -465,6 +465,7 @@ const Nav = {
       case 'garden': GardenPage.render(); break;
       case 'progress': ProgressPage.render(); break;
       case 'profile': ProfilePage.render(); break;
+      case 'intelligence': window.Intelligence?.render(); break;
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1596,12 +1597,13 @@ const TaskManager = {
     return State.tasks.filter(t => t.date === today);
   },
 
-  async add(text) {
+  // dateKey (optional): a Date#toDateString() value, so a task can be planned for another day.
+  async add(text, dateKey) {
     if (!text.trim() || !State.user) return;
     const data = {
       text: text.trim(),
       completed: false,
-      date: this.todayKey(),
+      date: dateKey || this.todayKey(),
     };
     const docRef = await addDoc(collection(db, 'users', State.user.uid, 'tasks'), data);
     State.tasks.push({ id: docRef.id, ...data });
@@ -2151,4 +2153,6 @@ window.Auth = Auth;
 window.Sessions = Sessions;
 window.Dashboard = Dashboard;
 window.FocusPage = FocusPage;
+// Handles used by the FocusForge Intelligence module (intelligence.js).
+window.FocusForge = { auth, db, State, Utils };
 window.ProfilePage = ProfilePage;

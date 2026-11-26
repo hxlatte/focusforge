@@ -11,6 +11,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="intelligence.css" />
 </head>
 
 <body>
@@ -26,6 +27,7 @@
         <button class="nav-link" data-page="focus">Focus</button>
         <button class="nav-link" data-page="garden">Garden</button>
         <button class="nav-link" data-page="progress">Progress</button>
+        <button class="nav-link" data-page="intelligence">Intelligence</button>
         <button class="nav-link" data-page="profile">Profile</button>
       </nav>
 
@@ -313,12 +315,15 @@
           <h1 class="welcome-title" id="welcomeName">Welcome back</h1>
           <p class="welcome-sub">Here's a quiet look at your progress today.</p>
         </div>
-        <button class="btn btn-primary" id="dashStartFocus">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="5 3 19 12 5 21 5 3" />
-          </svg>
-          Start focus session
-        </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost" data-page="intelligence">Intelligence</button>
+          <button class="btn btn-primary" id="dashStartFocus">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            Start focus session
+          </button>
+        </div>
       </section>
 
       <!-- Stat cards -->
@@ -627,6 +632,11 @@
       </section>
 
     </div>
+  </main>
+
+  <!-- ========== PAGE: FOCUSFORGE INTELLIGENCE ========== -->
+  <main class="page" id="page-intelligence">
+    <div class="ix-layout" id="ixRoot"></div>
   </main>
 
   <!-- ========== LOG FORM MODAL ========== -->
@@ -997,6 +1007,7 @@
   </div>
 
   <script type="module" src="app.js"></script>
+  <script type="module" src="intelligence.js"></script>
 </body>
 
 </html>
