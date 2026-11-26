@@ -9,3 +9,4 @@ scikit-learn>=1.4
 # model cannot be downloaded) the analyzer falls back to a TF-IDF embedder and
 # says so in its output.
 sentence-transformers>=2.7
+fsrs>=6.0
