@@ -62,6 +62,7 @@ def current_user(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token")
     try:
         return verify_token(creds.credentials)
-    except ValueError:
-        log.info("Rejected invalid ID token")
+    except ValueError as exc:
+        # Reason only (never the token itself), so hosted deploys can be diagnosed.
+        log.info("Rejected invalid ID token: %s", str(exc)[:200])
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
