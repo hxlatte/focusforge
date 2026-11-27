@@ -1,0 +1,11 @@
+# Lightweight install for hosting (Render free tier has ~512 MB RAM).
+# Same as requirements.txt without sentence-transformers (pulls in PyTorch);
+# the analyzer then uses its TF-IDF fallback and reports that in its output.
+fastapi>=0.110
+uvicorn[standard]>=0.29
+firebase-admin>=6.5
+pydantic>=2.6
+numpy>=1.26
+pandas>=2.1
+scikit-learn>=1.4
+fsrs>=6.0

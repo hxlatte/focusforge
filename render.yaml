@@ -1,0 +1,23 @@
+# Render Blueprint for the Intelligence backend (the static site stays on Netlify).
+services:
+  - type: web
+    name: focusforge-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: FIREBASE_PROJECT_ID
+        value: focusforge-3a4f7
+      - key: ALLOWED_ORIGINS
+        value: https://focussforge.netlify.app,https://focusforge-3a4f7.web.app,https://focusforge-3a4f7.firebaseapp.com
+      - key: FOCUSFORGE_EMBEDDER
+        value: tfidf
+      # Add the service-account JSON as a Secret File named service-account.json in the
+      # Render dashboard (Environment > Secret Files). Never commit it.
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/service-account.json
