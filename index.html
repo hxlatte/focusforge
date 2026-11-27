@@ -1006,6 +1006,10 @@
     </div>
   </div>
 
+  <script>
+    /* Intelligence API: local backend by default; hosted backend when not on localhost. */
+    if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) window.FF_API_BASE = 'https://focusforge-api-g7ba.onrender.com';
+  </script>
   <script type="module" src="app.js"></script>
   <script type="module" src="intelligence.js"></script>
 </body>
