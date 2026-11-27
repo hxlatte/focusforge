@@ -11,6 +11,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="intelligence.css" />
 </head>
 
 <body>
@@ -26,6 +27,7 @@
         <button class="nav-link" data-page="focus">Focus</button>
         <button class="nav-link" data-page="garden">Garden</button>
         <button class="nav-link" data-page="progress">Progress</button>
+        <button class="nav-link" data-page="intelligence">Intelligence</button>
         <button class="nav-link" data-page="profile">Profile</button>
       </nav>
 
@@ -313,12 +315,15 @@
           <h1 class="welcome-title" id="welcomeName">Welcome back</h1>
           <p class="welcome-sub">Here's a quiet look at your progress today.</p>
         </div>
-        <button class="btn btn-primary" id="dashStartFocus">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="5 3 19 12 5 21 5 3" />
-          </svg>
-          Start focus session
-        </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost" data-page="intelligence">Intelligence</button>
+          <button class="btn btn-primary" id="dashStartFocus">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            Start focus session
+          </button>
+        </div>
       </section>
 
       <!-- Stat cards -->
@@ -629,6 +634,11 @@
     </div>
   </main>
 
+  <!-- ========== PAGE: FOCUSFORGE INTELLIGENCE ========== -->
+  <main class="page" id="page-intelligence">
+    <div class="ix-layout" id="ixRoot"></div>
+  </main>
+
   <!-- ========== LOG FORM MODAL ========== -->
   <div class="auth-overlay" id="logOverlay">
     <div class="auth-modal">
@@ -653,6 +663,20 @@
         <label class="form-label">Notes <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
         <textarea class="form-input" id="logNotes" placeholder="What did you cover? Any reflections..."
           rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">When did you study? <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <input type="datetime-local" class="form-input" id="logWhen" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">How well did it go? <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <select class="form-input" id="logConfidence">
+          <option value="">—</option>
+          <option value="1">Lost</option>
+          <option value="2">Shaky</option>
+          <option value="3">Okay</option>
+          <option value="4">Solid</option>
+        </select>
       </div>
       <button class="btn btn-primary btn-full" id="saveLogBtn">Save log</button>
     </div>
@@ -968,11 +992,22 @@
       </div>
       <h2 class="completion-title" id="completionTitle">Session complete</h2>
       <p class="completion-sub" id="completionSub">Well done. Take a moment to breathe.</p>
+      <div class="completion-reflect hidden" id="completionReflect">
+        <textarea class="form-input" id="reflectNotes" rows="2"
+          placeholder="Optional: what did you cover, and what felt unclear?"></textarea>
+        <div class="reflect-chips" role="group" aria-label="How well did it go?">
+          <button type="button" class="reflect-chip" data-conf="1">Lost</button>
+          <button type="button" class="reflect-chip" data-conf="2">Shaky</button>
+          <button type="button" class="reflect-chip" data-conf="3">Okay</button>
+          <button type="button" class="reflect-chip" data-conf="4">Solid</button>
+        </div>
+      </div>
       <button class="btn btn-primary" id="completionClose">Continue</button>
     </div>
   </div>
 
   <script type="module" src="app.js"></script>
+  <script type="module" src="intelligence.js"></script>
 </body>
 
 </html>

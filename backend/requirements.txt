@@ -1,0 +1,12 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+firebase-admin>=6.5
+pydantic>=2.6
+numpy>=1.26
+pandas>=2.1
+scikit-learn>=1.4
+# Study-Log Analyzer embeddings. Optional at runtime: if it is missing (or the
+# model cannot be downloaded) the analyzer falls back to a TF-IDF embedder and
+# says so in its output.
+sentence-transformers>=2.7
+fsrs>=6.0

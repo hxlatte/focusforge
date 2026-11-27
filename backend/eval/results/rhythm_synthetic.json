@@ -1,0 +1,106 @@
+{
+  "seeds_per_cell": 20,
+  "note": "SYNTHETIC users, planted ground truth",
+  "cells": [
+    {
+      "planted": true,
+      "days": 20,
+      "median_attempts": 44.5,
+      "model_active_rate": 0.15,
+      "mean_auc_when_active": 0.762,
+      "mean_logloss_gain_when_active": 0.0861,
+      "recovered_morning_effect_rate": 0.65,
+      "recovered_long_session_effect_rate": 0.3
+    },
+    {
+      "planted": true,
+      "days": 40,
+      "median_attempts": 89.5,
+      "model_active_rate": 0.3,
+      "mean_auc_when_active": 0.719,
+      "mean_logloss_gain_when_active": 0.0438,
+      "recovered_morning_effect_rate": 0.85,
+      "recovered_long_session_effect_rate": 0.85
+    },
+    {
+      "planted": true,
+      "days": 70,
+      "median_attempts": 157.0,
+      "model_active_rate": 0.55,
+      "mean_auc_when_active": 0.735,
+      "mean_logloss_gain_when_active": 0.069,
+      "recovered_morning_effect_rate": 1.0,
+      "recovered_long_session_effect_rate": 1.0
+    },
+    {
+      "planted": true,
+      "days": 100,
+      "median_attempts": 224.0,
+      "model_active_rate": 0.85,
+      "mean_auc_when_active": 0.728,
+      "mean_logloss_gain_when_active": 0.073,
+      "recovered_morning_effect_rate": 1.0,
+      "recovered_long_session_effect_rate": 1.0
+    },
+    {
+      "planted": true,
+      "days": 150,
+      "median_attempts": 334.0,
+      "model_active_rate": 1.0,
+      "mean_auc_when_active": 0.735,
+      "mean_logloss_gain_when_active": 0.0768,
+      "recovered_morning_effect_rate": 1.0,
+      "recovered_long_session_effect_rate": 1.0
+    },
+    {
+      "planted": false,
+      "days": 20,
+      "median_attempts": 45.0,
+      "model_active_rate": 0.0,
+      "mean_auc_when_active": null,
+      "mean_logloss_gain_when_active": null,
+      "false_period_or_length_claim_rate": 0.1,
+      "false_subject_claim_rate": 0.1
+    },
+    {
+      "planted": false,
+      "days": 40,
+      "median_attempts": 90.0,
+      "model_active_rate": 0.0,
+      "mean_auc_when_active": null,
+      "mean_logloss_gain_when_active": null,
+      "false_period_or_length_claim_rate": 0.2,
+      "false_subject_claim_rate": 0.1
+    },
+    {
+      "planted": false,
+      "days": 70,
+      "median_attempts": 151.0,
+      "model_active_rate": 0.0,
+      "mean_auc_when_active": null,
+      "mean_logloss_gain_when_active": null,
+      "false_period_or_length_claim_rate": 0.25,
+      "false_subject_claim_rate": 0.1
+    },
+    {
+      "planted": false,
+      "days": 100,
+      "median_attempts": 219.5,
+      "model_active_rate": 0.0,
+      "mean_auc_when_active": null,
+      "mean_logloss_gain_when_active": null,
+      "false_period_or_length_claim_rate": 0.0,
+      "false_subject_claim_rate": 0.0
+    },
+    {
+      "planted": false,
+      "days": 150,
+      "median_attempts": 328.5,
+      "model_active_rate": 0.0,
+      "mean_auc_when_active": null,
+      "mean_logloss_gain_when_active": null,
+      "false_period_or_length_claim_rate": 0.1,
+      "false_subject_claim_rate": 0.0
+    }
+  ]
+}

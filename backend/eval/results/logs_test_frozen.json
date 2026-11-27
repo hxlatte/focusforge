@@ -1,0 +1,260 @@
+{
+  "split": "test",
+  "extraction": {
+    "pair": {
+      "precision": 0.672,
+      "recall": 0.796,
+      "f1": 0.729,
+      "tp": 39,
+      "fp": 19,
+      "fn": 10
+    },
+    "judgement": {
+      "precision": 0.708,
+      "recall": 0.791,
+      "f1": 0.747,
+      "tp": 34,
+      "fp": 14,
+      "fn": 9
+    },
+    "topic": {
+      "precision": 0.717,
+      "recall": 0.864,
+      "f1": 0.784,
+      "tp": 38,
+      "fp": 15,
+      "fn": 6
+    },
+    "stance_accuracy_given_topic_found": 0.929,
+    "n_notes": 30,
+    "misses": [
+      {
+        "note": "I can't wrap my head around monads.",
+        "missed": [],
+        "extra": [
+          [
+            "head",
+            "struggling"
+          ]
+        ]
+      },
+      {
+        "note": "Completed the problem set on limits. Feeling pretty confident.",
+        "missed": [],
+        "extra": [
+          [
+            "limit",
+            "mention"
+          ],
+          [
+            "problemset",
+            "mention"
+          ]
+        ]
+      },
+      {
+        "note": "Not sure I'll remember the Krebs cycle for the exam. Should go over it again tomorrow.",
+        "missed": [
+          [
+            "krebcycle",
+            "revise"
+          ]
+        ],
+        "extra": [
+          [
+            "exam",
+            "revise"
+          ],
+          [
+            "exam",
+            "struggling"
+          ],
+          [
+            "i'llremember",
+            "struggling"
+          ]
+        ]
+      },
+      {
+        "note": "Lagrange multipliers are way over my head.",
+        "missed": [
+          [
+            "lagrangemultiplier",
+            "struggling"
+          ]
+        ],
+        "extra": []
+      },
+      {
+        "note": "Merge sort is easy now but quicksort partitioning still trips me up.",
+        "missed": [
+          [
+            "quicksortpartitioning",
+            "struggling"
+          ]
+        ],
+        "extra": []
+      },
+      {
+        "note": "The proof by induction was hard to follow.",
+        "missed": [],
+        "extra": [
+          [
+            "follow",
+            "struggling"
+          ]
+        ]
+      },
+      {
+        "note": "Honestly lost during the whole lecture on eigenvalues.",
+        "missed": [],
+        "extra": [
+          [
+            "honestly",
+            "struggling"
+          ]
+        ]
+      },
+      {
+        "note": "Still can't get my head around pointers to pointers.",
+        "missed": [],
+        "extra": [
+          [
+            "head",
+            "struggling"
+          ]
+        ]
+      },
+      {
+        "note": "Great session. Sorted out my confusion about the central limit theorem.",
+        "missed": [
+          [
+            "centrallimittheorem",
+            "understood"
+          ]
+        ],
+        "extra": [
+          [
+            "centrallimittheorem",
+            "struggling"
+          ],
+          [
+            "sorted",
+            "struggling"
+          ]
+        ]
+      },
+      {
+        "note": "Struggled with the second half of the paper on transformers, will reread it.",
+        "missed": [],
+        "extra": [
+          [
+            "paper",
+            "struggling"
+          ],
+          [
+            "secondhalf",
+            "struggling"
+          ],
+          [
+            "transformer",
+            "revised"
+          ]
+        ]
+      },
+      {
+        "note": "Learned about supply and demand. Makes total sense.",
+        "missed": [
+          [
+            "supplyanddemand",
+            "mention"
+          ],
+          [
+            "supplyanddemand",
+            "understood"
+          ]
+        ],
+        "extra": [
+          [
+            "demand",
+            "mention"
+          ],
+          [
+            "supply",
+            "mention"
+          ]
+        ]
+      },
+      {
+        "note": "I'm good with loops but recursion is where I get stuck.",
+        "missed": [
+          [
+            "loop",
+            "confident"
+          ]
+        ],
+        "extra": []
+      },
+      {
+        "note": "Did a mock test on organic chemistry and got 60%. Need to practise reaction mechanisms.",
+        "missed": [],
+        "extra": [
+          [
+            "mocktest",
+            "mention"
+          ]
+        ]
+      },
+      {
+        "note": "Confident about vectors, shaky on matrices.",
+        "missed": [
+          [
+            "matrix",
+            "struggling"
+          ]
+        ],
+        "extra": [
+          [
+            "matrice",
+            "confident"
+          ],
+          [
+            "shaky",
+            "confident"
+          ]
+        ]
+      },
+      {
+        "note": "I need to spend more time on the Treaty of Versailles.",
+        "missed": [
+          [
+            "treatyofversaille",
+            "revise"
+          ]
+        ],
+        "extra": []
+      },
+      {
+        "note": "Revised Python list comprehensions and dictionaries. Both feel solid.",
+        "missed": [
+          [
+            "pythonlistcomprehension",
+            "confident"
+          ]
+        ],
+        "extra": []
+      }
+    ]
+  },
+  "clustering": {
+    "embedder": "tfidf-char-ngrams (lexical fallback)",
+    "statements": 19,
+    "clusters_found": 4,
+    "precision": 1.0,
+    "recall": 0.519,
+    "f1": 0.683,
+    "tp": 14,
+    "fp": 0,
+    "fn": 13
+  }
+}
